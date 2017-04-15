@@ -1,0 +1,16 @@
+QToolButton{
+	min-width:40px;
+	min-height:40px;
+}
+QToolButton:hover{
+        border-style:solid;
+        border:4px;
+}
+QToolButton:pressed{
+	color:rgb(255,0,0);
+}
+#NaviBar#QToolButton#mWriteMail:hover{
+    min-width:80px;
+    min-height:80px;
+    backgroud:gray;
+}

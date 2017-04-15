@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>icons/about.png</file>
+        <file>icons/contacts.png</file>
+        <file>icons/draftbox.png</file>
+        <file>icons/dustbin.png</file>
+        <file>icons/left.png</file>
+        <file>icons/opened.png</file>
+        <file>icons/recv.png</file>
+        <file>icons/right.png</file>
+        <file>icons/send.png</file>
+        <file>icons/settings.png</file>
+        <file>icons/settings_2.png</file>
+        <file>icons/write.png</file>
+        <file>icons/write_2.png</file>
+        <file>icons/unopen.png</file>
+        <file>icons/csEmail.png</file>
+    </qresource>
+</RCC>

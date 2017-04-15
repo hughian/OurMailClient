@@ -1,0 +1,11 @@
+QToolButton{
+	min-width:40px;
+	min-height:40px;
+}
+QToolButton:hover{
+
+        border-image:url(":/images/icons/send.png");
+}
+QToolButton:pressed{
+	color:rgb(255,0,0);
+}
