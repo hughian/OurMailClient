@@ -19,6 +19,13 @@
 #include <QMessageBox>
 #include <QIcon>
 #include <QStackedWidget>
+#include <QDateTime>
+#include <QCloseEvent>
+#include <QMenu>
+#include <QAction>
+#include <QDebug>
 #include "structdef.h"
-bool readSetFile(QWidget *parent, QString str[]);
+bool readSetFile(QWidget *msgParent, QString str[]);
+bool readBoxFile(QString filename, QList<QStringList> &Qqsl);
+bool writeBoxFile(QString filename,QList<QStringList> &Qqsl);
 #endif // QT_H

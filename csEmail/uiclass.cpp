@@ -1,5 +1,6 @@
 ﻿#include "uiclass.h"
-
+#include <QDebug>
+extern QString setData[8];
 NavigationBar::NavigationBar(QWidget *parent):
     QWidget(parent)
 {
@@ -80,50 +81,51 @@ NaviBar::NaviBar(QWidget *parent):QWidget(parent)
 
 NaviBar::NaviBar(int a,QWidget *parent):QWidget(parent)
 {
+    QSize btnsize(50,50);
     mWriteMail = new QToolButton();
     mWriteMail-> setIcon(QIcon(":/images/icons/write_2.png"));
-    mWriteMail-> setIconSize(QSize(40,40));
+    mWriteMail-> setIconSize(btnsize);
     mWriteMail-> setText(QStringLiteral("写　信"));
     mWriteMail-> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     mContacts = new QToolButton();
     mContacts -> setIcon(QIcon(":/images/icons/contacts.png"));
-    mContacts -> setIconSize(QSize(40,40));
+    mContacts -> setIconSize(btnsize);
     mContacts -> setText(QStringLiteral("联系人"));
     mContacts -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mRecvBox  = new QToolButton();
     mRecvBox -> setIcon(QIcon(":/images/icons/recv.png"));
-    mRecvBox -> setIconSize(QSize(40,40));
+    mRecvBox -> setIconSize(btnsize);
     mRecvBox -> setText(QStringLiteral("收件箱"));
     mRecvBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mSendBox  = new QToolButton();
     mSendBox -> setIcon(QIcon(":/images/icons/send.png"));
-    mSendBox -> setIconSize(QSize(40,40));
+    mSendBox -> setIconSize(btnsize);
     mSendBox -> setText(QStringLiteral("已发送"));
     mSendBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mDraftBox = new QToolButton();
     mDraftBox -> setIcon(QIcon(":/images/icons/draftbox.png"));
-    mDraftBox -> setIconSize(QSize(40,40));
+    mDraftBox -> setIconSize(btnsize);
     mDraftBox -> setText(QStringLiteral("草稿箱"));
     mDraftBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mDustBin  = new QToolButton();
     mDustBin -> setIcon(QIcon(":/images/icons/dustbin.png"));
-    mDustBin -> setIconSize(QSize(40,40));
+    mDustBin -> setIconSize(btnsize);
     mDustBin -> setText(QStringLiteral("垃圾箱"));
     mDustBin -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mSettings = new QToolButton();
     mSettings  -> setIcon(QIcon(":/images/icons/settings.png"));
-    mSettings  -> setIconSize(QSize(40,40));
+    mSettings  -> setIconSize(btnsize);
     mSettings  -> setText(QStringLiteral("设　置"));
     mSettings  -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mAbout    = new QToolButton();
     mAbout -> setIcon(QIcon(":/images/icons/about.png"));
-    mAbout -> setIconSize(QSize(40,40));
+    mAbout -> setIconSize(btnsize);
     mAbout -> setText(QStringLiteral("关　于"));
     mAbout -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     QVBoxLayout *mainLyt = new QVBoxLayout(this);
     mainLyt -> addWidget(mWriteMail);
-    mainLyt -> addWidget(mContacts);
+    //mainLyt -> addWidget(mContacts);
     mainLyt -> addWidget(mRecvBox);
     mainLyt -> addWidget(mSendBox);
     mainLyt -> addWidget(mDraftBox);
@@ -133,51 +135,180 @@ NaviBar::NaviBar(int a,QWidget *parent):QWidget(parent)
 
 }
 
-MailList::MailList(int type,QWidget *parent):QWidget(parent)
+MailList::MailList(QWidget *parent):QWidget(parent)
 {
     mTable = new QTableWidget(this);
     mTable -> setColumnCount(4);
-    mTable -> horizontalHeader()->setDefaultSectionSize(150);
-    mTable -> horizontalHeader()->setSectionsMovable(false);
-    mTable -> horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    mTable -> horizontalHeader() ->resizeSection(0,30);
-    mTable -> horizontalHeader() ->setDefaultAlignment(Qt::AlignCenter);
-    mTable -> horizontalHeader() ->setSectionsClickable(false); //setClickable(bool) is obsoleted;
+    mTable -> horizontalHeader() -> setDefaultSectionSize(150);
+    mTable -> horizontalHeader() -> setSectionsMovable(false);
+    mTable -> horizontalHeader() -> setSectionResizeMode(QHeaderView::Fixed);
+    mTable -> horizontalHeader() -> resizeSection(0,30);
+    mTable -> horizontalHeader() -> resizeSection(1,180);
+    mTable -> horizontalHeader() -> resizeSection(2,180);
+    mTable -> horizontalHeader() -> setDefaultAlignment(Qt::AlignCenter);
+    mTable -> horizontalHeader() -> setSectionsClickable(false); //setClickable(bool) is obsoleted;
 
     QFont font = mTable -> horizontalHeader() -> font();
     font.setBold(true);
     mTable -> horizontalHeader() -> setFont(font);
     mTable -> horizontalHeader() -> setStretchLastSection(true);
+    mTable -> horizontalHeader() -> setHighlightSections(false);
     mTable -> setShowGrid(false);
+    //mTable -> setStyleSheet("selection-background-color:lightblue");
+    QPalette pal;
+    pal.setColor(QPalette::Base,QColor(242,242,242));
+    pal.setColor(QPalette::AlternateBase,QColor(222,222,222));
+    mTable -> setPalette(pal);
+    mTable -> setAlternatingRowColors(true);
     mTable -> verticalHeader() -> setVisible(false);
     mTable -> setEditTriggers(QAbstractItemView::NoEditTriggers);
     mTable -> setSelectionBehavior(QAbstractItemView::SelectRows);
     mTable -> setSelectionMode(QAbstractItemView::SingleSelection);
-
-    QStringList header;
+    mTable -> setTabKeyNavigation(true);
+    mTable -> setItemDelegate(new NoFocusDelegate());
     QTableWidgetItem *item = new QTableWidgetItem();
     item -> setIcon(QIcon(":/images/icons/unopen.png"));
     item -> setSizeHint(QSize(12,12));
     mTable -> setHorizontalHeaderItem(0,item);
-    switch (type) {
-    case RECV:
-        header<<QStringLiteral("")<<QStringLiteral("发件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
-        break;
-    case SEND:
-    case DRAFT:
-        header<<QStringLiteral("")<<QStringLiteral("收件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
-        break;
-    case DUST:
-        header<<QStringLiteral("")<<QStringLiteral("人")<<QStringLiteral("主题")<<QStringLiteral("时间");
-    default:
-        break;
-    }
-    mTable -> setHorizontalHeaderLabels(header);
-
-    mTable -> setRowCount(1);
-    mTable -> setItem(0,0, new QTableWidgetItem("123"));
+    this->initActions();
     QVBoxLayout *mainLyt = new QVBoxLayout(this);
     mainLyt -> addWidget(mTable);
+}
+//void MailList::contextMenuEvent(QContextMenuEvent *event)
+//{
+//    mPopMenu -> resize(QSize(200,180));
+//    //由于QTableWidget被放入别的QWidget后，使用mTable -> mapFromGlobal(QCursor::pos())的办法无法捕捉最后一行item的右键信息
+//    //所以使用mTable -> viewport() 返回当前坐标的QWidget然后再mapFromGlobal()获取item信息。
+//    QPoint point = mTable -> viewport() -> mapFromGlobal(QCursor::pos());
+//    qDebug()<<mTable -> currentRow()<< point;
+//    QTableWidgetItem *item = mTable -> itemAt(point);
+//    qDebug()<<item;
+//    if(item != NULL){
+//        qDebug()<<"test";
+//        mPopMenu -> addAction(mOpen);
+//        mPopMenu -> addAction(mDelete);
+
+//        mPopMenu -> exec(QCursor::pos());
+//        event -> accept();
+//    }
+
+//}
+void MailList::setBox(QString &filename)
+{
+    readBoxFile(filename,mQqsl);
+    qDebug()<<mQqsl;
+    int row = 0;
+    QStringList qsl;
+    mTable -> clearContents();
+    for(QList<QStringList>::iterator it = mQqsl.begin();it != mQqsl.end();it++)
+    {
+        qsl = *it;
+        mTable -> setRowCount(row+1);
+        mTable -> setItem(row,1,new QTableWidgetItem(qsl.at(1)));
+        mTable -> setItem(row,2,new QTableWidgetItem(qsl.at(3)));
+        mTable -> setItem(row++,3,new QTableWidgetItem(qsl.at(5)));
+    }
+    qDebug()<<"setBox"<<filename;
+}
+void MailList::initActions()
+{
+    mPopMenu = new QMenu(this);
+    mOpen    = new QAction(QStringLiteral("打开"),this);
+    mDelete  = new QAction(QStringLiteral("删除"),this);
+}
+RecvList::RecvList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("发件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
+    mTable -> setHorizontalHeaderLabels(header);
+    this -> setRecv();
+}
+void RecvList::setRecv()
+{
+    this -> setBox(QString("recv.txt"));
+}
+SendList::SendList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("收件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
+    mTable -> setHorizontalHeaderLabels(header);
+    this -> setSend();
+}
+void SendList::setSend()
+{
+    this -> setBox(QString("send.txt"));
+}
+DrftList::DrftList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("收件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
+    mTable -> setHorizontalHeaderLabels(header);
+    mDeleAll = new QAction(QStringLiteral("清空草稿箱"));
+    this -> setDraft();
+    connect(mOpen  ,SIGNAL(triggered(bool)),this,SLOT(openDraft()));
+    connect(mDelete,SIGNAL(triggered(bool)),this,SLOT(deleDraft()));
+    connect(mTable,SIGNAL(itemDoubleClicked(QTableWidgetItem*)),this,SLOT(openDraft()));
+}
+void DrftList::setDraft()
+{
+    this -> setBox(QString("draft.txt"));
+}
+void DrftList::openDraft()
+{
+    qDebug()<<"open Draft";
+    int row = mTable -> currentRow();
+    QStringList qsl = mQqsl.at(row);
+    WriteMailDlg *Dlg = new WriteMailDlg();
+    Dlg -> openDraft(qsl);
+    Dlg -> exec();
+    delete Dlg;
+    //this -> deleDraft();
+}
+void DrftList::deleDraft()
+{
+    int row = mTable -> currentRow();
+    mQqsl.removeAt(row);
+    mTable -> clearContents();
+    QStringList qsl;
+    row = 0;
+    for(QList<QStringList>::iterator it = mQqsl.begin();it != mQqsl.end();it++)
+    {
+        qsl = *it;
+        mTable -> setRowCount(row+1);
+        mTable -> setItem(row,1,new QTableWidgetItem(qsl.at(1)));
+        mTable -> setItem(row,2,new QTableWidgetItem(qsl.at(3)));
+        mTable -> setItem(row++,3,new QTableWidgetItem(qsl.at(5)));
+    }
+    writeBoxFile("draft.txt",mQqsl);
+}
+
+void DrftList::contextMenuEvent(QContextMenuEvent *event)
+{
+    mPopMenu -> resize(QSize(200,180));
+    //由于QTableWidget被放入别的QWidget后，使用mTable -> mapFromGlobal(QCursor::pos())的办法无法捕捉最后一行item的右键信息
+    //所以使用mTable -> viewport() 返回当前坐标的QWidget然后再mapFromGlobal()获取item信息。
+    QPoint point = mTable -> viewport() -> mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *item = mTable -> itemAt(point);
+    if(item != NULL){
+        mPopMenu -> addAction(mOpen);
+        mPopMenu -> addAction(mDelete);
+        mPopMenu -> addAction(mDeleAll);
+
+        mPopMenu -> exec(QCursor::pos());
+        event -> accept();
+    }
+}
+
+DustList::DustList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("收件人")<<QStringLiteral("主题")<<QStringLiteral("时间");
+    mTable -> setHorizontalHeaderLabels(header);
+    this -> setDust();
+}
+void DustList::setDust()
+{
+
 }
 
 WriteMailDlg::WriteMailDlg(QWidget *parent):QDialog(parent)
@@ -188,35 +319,201 @@ WriteMailDlg::WriteMailDlg(QWidget *parent):QDialog(parent)
     mRecvEdit = new QLineEdit();
     mSubsEdit = new QLineEdit();
     mCtntEdit = new QTextEdit();
-
+    mDraftEdited = false;
+    mDraftorMail = false; // default as mail
     QLabel *mRecvLabel = new QLabel(QStringLiteral("收件人"));
     QLabel *mTipsLabel = new QLabel(QStringLiteral("若多个收件人，收件人地址之间请用分号';'隔开.例如760156619@qq.com;Hughian@gmail.com"));
     QLabel *mSubsLabel = new QLabel(QStringLiteral("主题"));
     QLabel *mCtntLabel = new QLabel(QStringLiteral("正文"));
     QGridLayout *mainLyt = new QGridLayout(this);
-    mainLyt -> addWidget(mRecvLabel,1,0);
-    mainLyt -> addWidget(mRecvEdit ,1,1,1,4);
-    mainLyt -> addWidget(mTipsLabel,2,1);
-    mainLyt -> addWidget(mSubsLabel,3,0);
-    mainLyt -> addWidget(mSubsEdit ,3,1);
-    mainLyt -> addWidget(mCtntLabel,4,0);
-    mainLyt -> addWidget(mCtntEdit,5,0,1,5);
-    mainLyt -> addWidget(mSend,6,1,Qt::AlignCenter);
-    mainLyt -> addWidget(mSave,6,2,Qt::AlignCenter);
-    mainLyt -> addWidget(mQuit,6,3,Qt::AlignCenter);
-
+    mainLyt -> addWidget(mRecvLabel,0,1);
+    mainLyt -> addWidget(mRecvEdit ,0,2,1,4);
+    mainLyt -> addWidget(mTipsLabel,1,2,1,4);
+    mainLyt -> addWidget(mSubsLabel,2,1);
+    mainLyt -> addWidget(mSubsEdit ,2,2,1,4);
+    mainLyt -> addWidget(mCtntLabel,3,1,Qt::AlignTop);
+    mainLyt -> addWidget(mCtntEdit ,3,2,1,4);
+    mainLyt -> addWidget(mSend,4,3,Qt::AlignCenter);
+    mainLyt -> addWidget(mSave,4,4,Qt::AlignRight);
+    mainLyt -> addWidget(mQuit,4,5,Qt::AlignLeft);
+    mainLyt -> setVerticalSpacing(10);
+    mainLyt -> setColumnStretch(0,1);
+    mainLyt -> setColumnStretch(1,1);
+    mainLyt -> setColumnStretch(2,6);
+    mainLyt -> setColumnStretch(3,12);
+    mainLyt -> setColumnStretch(4,1);
+    mainLyt -> setColumnStretch(5,1);
+    mainLyt -> setColumnStretch(6,1);
     mainLyt -> setRowStretch(0,1);
-    mainLyt -> setRowStretch(1,1);
+    mainLyt -> setRowStretch(1,0);
     mainLyt -> setRowStretch(2,1);
-    mainLyt -> setRowStretch(3,1);
+    mainLyt -> setRowStretch(3,12);
     mainLyt -> setRowStretch(4,1);
-    mainLyt -> setRowStretch(5,12);
-    mainLyt -> setRowStretch(6,1);
+    mainLyt -> setContentsMargins(0,30,0,15);
 
+    connect(mSend,SIGNAL(clicked(bool)),this,SLOT(sendEmail()));
+    connect(mSave,SIGNAL(clicked(bool)),this,SLOT(save()));
+    connect(mQuit,SIGNAL(clicked(bool)),this,SLOT(close()));
+
+    connect(mRecvEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
+    connect(mSubsEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
+    connect(mCtntEdit,SIGNAL(textChanged()),this,SLOT(setFlag()));
     setWindowIcon(QIcon(":/images/icons/write_2.png"));
     setWindowTitle(QStringLiteral("写信"));
     setWindowFlags(Qt::WindowCloseButtonHint);
     resize(QSize(800,600));
+}
+void WriteMailDlg::change()
+{
+    qDebug()<<"change";
+}
+void WriteMailDlg::edit()
+{
+    qDebug()<<"edit";
+}
+void WriteMailDlg::setFlag()
+{
+    if(mDraftorMail){
+        if(mQsl.at(1)==mRecvEdit->text() && mQsl.at(3)==mSubsEdit->text() && mQsl.at(4)==mCtntEdit->toPlainText())
+        {   mDraftEdited = false;   qDebug()<<"f";}
+        else
+        {   mDraftEdited = true;    qDebug()<<"t";}
+    }
+}
+void WriteMailDlg::readEdits(MailData &md)
+{
+    QDateTime currentTime = QDateTime::currentDateTime();
+    QStringList qsl;
+    QString str;
+    md.srcAddr = setData[1].toStdString();
+    md.sender  = setData[0].toStdString();
+    md.subject = mSubsEdit->text().toStdString();
+    md.contents= mCtntEdit->toPlainText().toStdString();
+    md.time.fromQString(currentTime.toString("yyyy-MM-dd hh:mm:ss"));
+    qsl = mRecvEdit->text().split(";",QString::SkipEmptyParts);
+    for(QStringList::Iterator it = qsl.begin();it != qsl.end();it++){
+        str = *it;
+        md.dstAddr.push_back(str.toStdString());
+    }
+}
+void WriteMailDlg::openDraft(QStringList &qsl)
+{
+    mQsl = qsl;
+    mRecvEdit->setText(qsl.at(1));
+    mSubsEdit->setText(qsl.at(3));
+    mCtntEdit->setText(qsl.at(4));
+    mDraftorMail = true;
+    mDraftEdited = false;
+}
+void WriteMailDlg::sendEmail()
+{
+    MailData md;
+    this->readEdits(md);
+    QStringList qsl;
+    md.toQStringList(qsl);
+    qDebug()<<qsl;
+//    MsgBox *msg = new MsgBox();
+//    msg->show();
+    /*
+     * here is where the messages will be send ;
+     * call send() to mail the MailData md;
+     * function send() to check the data completeness;
+     */
+
+    QMessageBox::information(this,QStringLiteral("发送邮件"),QStringLiteral("邮件发送成功"),QMessageBox::NoButton);
+    accept();
+}
+void WriteMailDlg::saveDraft()
+{
+    QFile file("../csEmail/data/draft.txt");
+    QStringList qsl;
+    QString str;
+    MailData md;
+    if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
+    {
+        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无法打开文件draft.txt"),QMessageBox::Yes);
+        accept();
+    }
+    QDataStream stream(&file);
+    this -> readEdits(md);
+    md.toQStringList(qsl);
+    str = qsl.at(4);
+    str.replace("\n","$#$");
+    qsl.replace(4,str);
+    qDebug()<<str;
+    str = qsl.join("\n");
+    stream<<str;
+    file.close();
+    QMessageBox::information(this,QStringLiteral("存草稿"),QStringLiteral("草稿保存成功"),QMessageBox::Ok);
+}
+void WriteMailDlg::save()
+{
+
+    bool editsEmpty = checkEdit();
+    qDebug()<<"123"<<editsEmpty<<mDraftEdited<<mDraftorMail;
+    if(!mDraftorMail && editsEmpty)
+        QMessageBox::warning(this,QStringLiteral("信息为空"),QStringLiteral("未输入任何邮件信息！"),QMessageBox::NoButton);
+    else if(!mDraftorMail && !editsEmpty){
+        this -> saveDraft();
+        accept();
+    }
+    else if(mDraftorMail && !mDraftEdited){
+        //qDebug()<<"456"<<QStringLiteral("草稿没有编辑，不用处理");//草稿没有编辑，不用处理
+        QMessageBox::warning(this,QStringLiteral("存草稿"),QStringLiteral("草稿保存成功"),QMessageBox::Ok);
+        accept();
+    }
+    else{//草稿有编辑,是否被删空
+        if(editsEmpty){
+            if(QMessageBox::warning(this,QStringLiteral("信息为空"),QStringLiteral("是否丢弃原草稿！"),QMessageBox::Yes|QMessageBox::No)==QMessageBox::Yes)
+            {
+                //this->delte();
+                accept();
+            }else{
+                accept();
+            }
+            qDebug()<<"789"<<QStringLiteral("删空，是否丢弃该草稿？");//删空，是否丢弃该草稿？
+        }
+        else{
+            if(QMessageBox::warning(this,QStringLiteral("保存草稿"),QStringLiteral("是否覆盖原草稿！"),QMessageBox::Yes|QMessageBox::No)==QMessageBox::Yes)
+            {
+                //this->replace();
+                accept();
+            }
+            qDebug()<<"000"<<QStringLiteral("草稿已经存在是否替换？");//草稿已经存在是否替换？
+        }
+    }
+}
+bool WriteMailDlg::checkEdit()
+{
+    if(mRecvEdit->text().size() == 0 && mSubsEdit->text().size() == 0 && mCtntEdit->toPlainText().size()==0)
+        return true;
+    else
+        return false;
+}
+
+void WriteMailDlg::closeEvent(QCloseEvent *event)
+{
+    if(mDraftorMail && !mDraftEdited){
+        accept();
+    }
+    else if(mDraftorMail && mDraftEdited)
+    {
+        this -> save();
+        qDebug()<<QStringLiteral("草稿修改");
+    }else{
+        if(checkEdit())
+            event -> accept();
+        else{
+            if(QMessageBox::warning(this,QStringLiteral("退出写信"),QStringLiteral("是否保存草稿？"),QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
+            {
+                this->saveDraft();
+                event->accept();
+            }
+            else{
+                event->accept();
+            }
+        }
+    }
 }
 
 SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
@@ -395,3 +692,10 @@ AboutDlg::AboutDlg(QWidget *parent):QDialog(parent)
     resize(QSize(400,300));
 }
 
+void NoFocusDelegate::paint(QPainter* painter, const QStyleOptionViewItem & option, const QModelIndex &index) const
+{
+    QStyleOptionViewItem itemOption(option);
+    if (itemOption.state & QStyle::State_HasFocus)
+        itemOption.state = itemOption.state ^ QStyle::State_HasFocus;
+    QStyledItemDelegate::paint(painter, itemOption, index);
+}
