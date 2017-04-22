@@ -1,18 +1,9 @@
-﻿#include "qmainwin.h"
+﻿#include "QMainWin.h"
 #include <QApplication>
 QString filePath = "../csEmail/data";
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
-//    QFile style("../csEmail/style.qss");
-//    if(!style.open(QIODevice::ReadOnly))
-//    {
-//        qDebug("open app.qss no!");
-//        //return -1;
-//    }
-//    a.setStyleSheet(style.readAll());
-//    style.close();
     QMainWin w;
     w.show();
 
@@ -22,7 +13,7 @@ int main(int argc, char *argv[])
 
 bool readSetFile(QWidget *msgParent, QString str[])
 {
-    QFile file("../csEmail/data/settings.txt");
+    QFile file(filePath+"/settings.txt");
     if(!file.open(QIODevice::ReadOnly)){
         QMessageBox::warning(msgParent,QStringLiteral("警告"),QStringLiteral("无法打开文件settings.txt"),QMessageBox::Yes);
         return false;
@@ -77,25 +68,26 @@ bool writeBoxFile(QString filename,QList<QStringList> &Qqsl)
         stream << str;
     }
     file.close();
+    return true;
 }
 
-bool Time::toQString(QString &str)
-{
-    str = QString::number(year,10)+"-"+QString::number(month,10)+"-"+QString::number(day,10) \
-            + " " + QString::number(hour,10) + ":" + QString::number(min,10) + ":" + QString::number(sec,10);
-    return true;
-}
-bool Time::fromQString(QString &str)
-{
-    QDateTime dateTime = QDateTime::fromString(str,"yyyy-MM-dd hh:mm:ss");
-    year = dateTime.date().year();
-    month= dateTime.date().month();
-    day  = dateTime.date().day();
-    hour = dateTime.time().hour();
-    min  = dateTime.time().minute();
-    sec  = dateTime.time().second();
-    return true;
-}
+//bool Time::toQString(QString &str)
+//{
+//    str = QString::number(year,10)+"-"+QString::number(month,10)+"-"+QString::number(day,10) \
+//            + " " + QString::number(hour,10) + ":" + QString::number(min,10) + ":" + QString::number(sec,10);
+//    return true;
+//}
+//bool Time::fromQString(QString &str)
+//{
+//    QDateTime dateTime = QDateTime::fromString(str,"yyyy-MM-dd hh:mm:ss");
+//    year = dateTime.date().year();
+//    month= dateTime.date().month();
+//    day  = dateTime.date().day();
+//    hour = dateTime.time().hour();
+//    min  = dateTime.time().minute();
+//    sec  = dateTime.time().second();
+//    return true;
+//}
 bool MailData::toQStringList(QStringList &qsl)
 {
     QStringList ltmp;
@@ -109,9 +101,8 @@ bool MailData::toQStringList(QStringList &qsl)
 
     qsl << stmp.fromStdString(sender);
     qsl << stmp.fromStdString(subject);
-    qsl << stmp.fromStdString(contents);
-    time.toQString(stmp);
-    qsl << stmp;
+    //qsl << stmp.fromStdString(contents);
+    qsl << stmp.fromStdString(time);
     return true;
 }
 
@@ -127,8 +118,7 @@ MailData& MailData::fromQStringList(QStringList &qsl)
     }
     sender = qsl.at(2).toStdString();
     subject = qsl.at(3).toStdString();
-    contents = qsl.at(4).toStdString();
-    str = qsl.at(5);
-    time.fromQString(str);
+    //contents = qsl.at(4).toStdString();
+    time  = qsl.at(5).toStdString();
     return *this;
 }

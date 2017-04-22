@@ -1,8 +1,8 @@
 #ifndef QMAINWIN_H
 #define QMAINWIN_H
-
 #include "qt.h"
-#include "uiclass.h"
+#include "BoxLists.h"
+#include "NaviBar.h"
 class QMainWin : public QWidget
 {
     Q_OBJECT
@@ -11,11 +11,12 @@ public:
     ~QMainWin();
 private:
     QLabel *mBoxLabel;
-    QLayout *mainLyt;
+    NaviBar  *mNaviBar;
     RecvList *mRecvTable;
     SendList *mSendTable;
     DrftList *mDrftTable;
     DustList *mDustTable;
+    QGridLayout *mainLyt;
     QStackedWidget *mStackWid;
 
 private slots:

@@ -24,16 +24,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-        qmainwin.cpp \
-    uiclass.cpp
+    MyBase64.cpp \
+    MyPop.cpp \
+    MyQuotedPrintable.cpp \
+    MySmtp.cpp \
+    MySocket.cpp \
+    NaviBar.cpp \
+    MailList.cpp \
+    BoxLists.cpp \
+    WriteMailDlg.cpp \
+    AboutDlg.cpp \
+    Settings.cpp \
+    QMainWin.cpp
 
-HEADERS  += qmainwin.h \
+HEADERS  += \
     qt.h \
-    uiclass.h \
-    structdef.h
+    structdef.h \
+    MyBase64.h \
+    MyPop.h \
+    MyQuotedPrintable.h \
+    MySmtp.h \
+    MySocket.h \
+    NaviBar.h \
+    MailList.h \
+    BoxLists.h \
+    WriteMailDlg.h \
+    AboutDlg.h \
+    Settings.h \
+    QMainWin.h
 
 RESOURCES += \
     img.qrc
 
-DISTFILES += \
-    style.qss
+DISTFILES +=

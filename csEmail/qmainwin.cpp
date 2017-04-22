@@ -1,49 +1,41 @@
-﻿#include "qmainwin.h"
-#include <QDebug>
+﻿#include "QMainWin.h"
+#include "WriteMailDlg.h"
+#include "Settings.h"
+#include "AboutDlg.h"
 QString setData[8];
 QMainWin::QMainWin(QWidget *parent)
     : QWidget(parent)
 {
-    mBoxLabel = new QLabel(QStringLiteral("收件箱"));
-    QFont font = mBoxLabel -> font();
-    font.setBold(true);
-    mBoxLabel -> setFont(font);
-    QVBoxLayout *labelLyt = new QVBoxLayout();
-    QHBoxLayout *lLyt     = new QHBoxLayout();
-    mainLyt = new QHBoxLayout(this);
-
-    //NavigationBar *pNaviBar = new NavigationBar(this);
-    NaviBar *pNaviBar = new NaviBar(1,this);
-    mainLyt -> addWidget(pNaviBar);
-
+    mBoxLabel  = new QLabel(QStringLiteral("收件箱"));
+    mainLyt    = new QGridLayout(this);
+    mNaviBar   = new NaviBar(this);
     mRecvTable = new RecvList(this);
     mSendTable = new SendList(this);
     mDrftTable = new DrftList(this);
     mDustTable = new DustList(this);
-    //mainLyt -> addWidget(table);
-    mStackWid = new QStackedWidget(this);
+    mStackWid  = new QStackedWidget(this);
+
     mStackWid -> addWidget(mRecvTable);
     mStackWid -> addWidget(mSendTable);
     mStackWid -> addWidget(mDrftTable);
     mStackWid -> addWidget(mDustTable);
-    lLyt -> addStretch(1);
-    lLyt -> addWidget(mBoxLabel);
-    lLyt -> addStretch(1);
-    labelLyt -> addLayout(lLyt);
-    labelLyt -> addWidget(mStackWid);
-    QFrame *frame = new QFrame();
-    frame -> setLayout(labelLyt);
-    mainLyt -> addWidget(frame);
 
-    connect(pNaviBar->mWriteMail,SIGNAL(clicked(bool)),this,SLOT(Write()));
-    connect(pNaviBar->mRecvBox  ,SIGNAL(clicked(bool)),this,SLOT(Recv()));
-    connect(pNaviBar->mSendBox  ,SIGNAL(clicked(bool)),this,SLOT(Send()));
-    connect(pNaviBar->mDraftBox ,SIGNAL(clicked(bool)),this,SLOT(Draft()));
-    connect(pNaviBar->mDustBin  ,SIGNAL(clicked(bool)),this,SLOT(Dust()));
-    connect(pNaviBar->mSettings ,SIGNAL(clicked(bool)),this,SLOT(Settings()));
-    connect(pNaviBar->mAbout	,SIGNAL(clicked(bool)),this,SLOT(About()));
+    mainLyt -> addWidget(mNaviBar,0,0,2,1);
+    mainLyt -> addWidget(mBoxLabel,0,1,1,1,Qt::AlignCenter);
+    mainLyt -> addWidget(mStackWid,1,1,1,1);
+
+    connect(mNaviBar->mWriteMail,SIGNAL(clicked(bool)),this,SLOT(Write()));
+    connect(mNaviBar->mRecvBox  ,SIGNAL(clicked(bool)),this,SLOT(Recv()));
+    connect(mNaviBar->mSendBox  ,SIGNAL(clicked(bool)),this,SLOT(Send()));
+    connect(mNaviBar->mDraftBox ,SIGNAL(clicked(bool)),this,SLOT(Draft()));
+    connect(mNaviBar->mDustBin  ,SIGNAL(clicked(bool)),this,SLOT(Dust()));
+    connect(mNaviBar->mSettings ,SIGNAL(clicked(bool)),this,SLOT(Settings()));
+    connect(mNaviBar->mAbout	,SIGNAL(clicked(bool)),this,SLOT(About()));
 
     readSetFile(this,setData);
+    QFont font = mBoxLabel -> font();
+    font.setBold(true);
+    mBoxLabel -> setFont(font);
     setWindowIcon(QIcon(":/images/icons/csEmail.png"));
     setWindowTitle("csEmal - "+setData[0]);
     resize(QSize(800,600));

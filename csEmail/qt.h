@@ -8,7 +8,9 @@
 #include <QToolButton>
 #include <QLabel>
 #include <QGroupBox>
+
 #include <QTableWidget>
+
 #include <QHeaderView>
 #include <QDialog>
 #include <QLineEdit>
@@ -24,7 +26,19 @@
 #include <QMenu>
 #include <QAction>
 #include <QDebug>
+
 #include "structdef.h"
+enum {RECV,SEND,DRAFT,DUST};
+//struct SetData{
+//    QString usrName;
+//    QString Address;
+//    QString recvSer;
+//    QString recvPort;
+//    QString sendSer;
+//    QString sendPort;
+//    QString Account;
+//    QString password;
+//};
 bool readSetFile(QWidget *msgParent, QString str[]);
 bool readBoxFile(QString filename, QList<QStringList> &Qqsl);
 bool writeBoxFile(QString filename,QList<QStringList> &Qqsl);
