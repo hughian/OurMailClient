@@ -1,81 +1,88 @@
-ï»¿#include "BoxLists.h"
+#include "BoxLists.h"
 #include "WriteMailDlg.h"
+#include "MyPop.h"
+#include "OpenMailDlg.h"
+#include <list>
+#include <QTextCodec>
+extern QString setData[8];
+/*
+ *RecvList
+ */
 RecvList::RecvList(QWidget *parent):MailList(parent)
 {
     QStringList header;
-    header<<QStringLiteral("")<<QStringLiteral("å‘ä»¶äºº")<<QStringLiteral("ä¸»é¢˜")<<QStringLiteral("æ—¶é—´");
+    header<<QStringLiteral("")<<QStringLiteral("·¢¼þÈË")<<QStringLiteral("Ö÷Ìâ")<<QStringLiteral("Ê±¼ä");
     mTable -> setHorizontalHeaderLabels(header);
-    this -> setRecv();
+    mDeleAll -> setText(QStringLiteral("Çå¿ÕÊÕ¼þÏä"));
+    mType  = RECV;
+    mFileName = QString("recv.txt");
+    connect(mOpen   ,SIGNAL(triggered(bool)),this,SLOT(openMail()));
+    connect(mDelete ,SIGNAL(triggered(bool)),this,SLOT(deleMail()));
+    connect(mDeleAll,SIGNAL(triggered(bool)),this,SLOT(clearBox()));
+    connect(mTable,SIGNAL(itemDoubleClicked(QTableWidgetItem*)),this,SLOT(openMail()));
+    this -> setBox();
 }
 
-void RecvList::setRecv()
+void RecvList::recvMail()
 {
-    this -> setBox(QString("recv.txt"));
-}
-
-SendList::SendList(QWidget *parent):MailList(parent)
-{
-    QStringList header;
-    header<<QStringLiteral("")<<QStringLiteral("æ”¶ä»¶äºº")<<QStringLiteral("ä¸»é¢˜")<<QStringLiteral("æ—¶é—´");
-    mTable -> setHorizontalHeaderLabels(header);
-    this -> setSend();
-}
-
-void SendList::setSend()
-{
-    this -> setBox(QString("send.txt"));
-}
-
-//#######################
-DrftList::DrftList(QWidget *parent):MailList(parent)
-{
-    QStringList header;
-    header<<QStringLiteral("")<<QStringLiteral("æ”¶ä»¶äºº")<<QStringLiteral("ä¸»é¢˜")<<QStringLiteral("æ—¶é—´");
-    mTable -> setHorizontalHeaderLabels(header);
-    mDeleAll = new QAction(QStringLiteral("æ¸…ç©ºè‰ç¨¿ç®±"));
-    this -> setDraft();
-    connect(mOpen  ,SIGNAL(triggered(bool)),this,SLOT(openDraft()));
-    connect(mDelete,SIGNAL(triggered(bool)),this,SLOT(deleDraft()));
-    connect(mTable,SIGNAL(itemDoubleClicked(QTableWidgetItem*)),this,SLOT(openDraft()));
-}
-void DrftList::setDraft()
-{
-    this -> setBox(QString("draft.txt"));
-}
-void DrftList::openDraft()
-{
-    qDebug()<<"open Draft";
-    int row = mTable -> currentRow();
-    QStringList qsl = mQqsl.at(row);
-    WriteMailDlg *Dlg = new WriteMailDlg();
-    Dlg -> openDraft(qsl);
-    Dlg -> exec();
-    delete Dlg;
-    //this -> deleDraft();
-}
-void DrftList::deleDraft()
-{
-    int row = mTable -> currentRow();
-    mQqsl.removeAt(row);
-    mTable -> clearContents();
-    QStringList qsl;
-    row = 0;
-    for(QList<QStringList>::iterator it = mQqsl.begin();it != mQqsl.end();it++)
+    list<MailData> lmd;
+    MyPop pop(setData[recvSer].toStdString(),setData[recvPort].toInt(),setData[Account].toStdString(),setData[password].toStdString());
+    pop.Connect();
+    pop.ConfirmUser();
+    pop.GetAllMails(lmd,setData[deleteOp].toInt());
+    //pop.GetMailContent()
+    qDebug()<<lmd.size();
+    QString str;
+    for(list<MailData>::iterator it = lmd.begin();it != lmd.end();it++)
     {
-        qsl = *it;
-        mTable -> setRowCount(row+1);
-        mTable -> setItem(row,1,new QTableWidgetItem(qsl.at(1)));
-        mTable -> setItem(row,2,new QTableWidgetItem(qsl.at(3)));
-        mTable -> setItem(row++,3,new QTableWidgetItem(qsl.at(5)));
+
+
+        qDebug("%s*************************\n*****************************%s",it->time.c_str(),it->subject.c_str());
+        str = QString::fromLocal8Bit(it->subject.c_str());
+        qDebug()<<str;
     }
-    writeBoxFile("draft.txt",mQqsl);
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    mdl= QList<MailData>::fromStdList(lmd);
+    foreach (MailData md, mdl) {
+        qDebug()<<QString::fromLocal8Bit(md.subject.c_str());
+    }
+    //printmdl(mdl);
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    this -> fillTable();
+    writeBoxFile("recv.txt",mdl);
+    foreach (MailData md, mdl) {
+        qDebug()<<QString::fromLocal8Bit(md.subject.c_str());
+    }
+    //printmdl(mdl);
+
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    //openMail();
 }
 
-void DrftList::contextMenuEvent(QContextMenuEvent *event)
+void RecvList::openMail()
+{
+    //QTextCodec::setCodecForLocale(QTextCodec::codecForName("gbk"));
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    foreach (MailData md, mdl) {
+        qDebug()<<QString::fromLocal8Bit(md.subject.c_str());
+    }
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    int mRow = mTable -> currentRow();
+    MailData md = mdl.at(mRow);
+    qDebug()<< QString::fromLocal8Bit(md.subject.c_str());
+    qDebug()<<"wwwwwwwwwwwwwwwwwwwwwwww:"<<QString::fromStdString(md.subject);
+    OpenMailDlg dlg(md);
+    dlg.exec();
+}
+void RecvList::deleMail()
+{
+
+}
+void RecvList::contextMenuEvent(QContextMenuEvent *event)
 {
     mPopMenu -> resize(QSize(200,180));
-    //ç”±äºŽQTableWidgetè¢«æ”¾å…¥åˆ«çš„QWidgetåŽï¼Œä½¿ç”¨mTable -> mapFromGlobal(QCursor::pos())çš„åŠžæ³•æ— æ³•æ•æ‰æœ€åŽä¸€è¡Œitemçš„å³é”®ä¿¡æ¯
-    //æ‰€ä»¥ä½¿ç”¨mTable -> viewport() è¿”å›žå½“å‰åæ ‡çš„QWidgetç„¶åŽå†mapFromGlobal()èŽ·å–itemä¿¡æ¯ã€‚
+    //ÓÉÓÚQTableWidget±»·ÅÈë±ðµÄQWidgetºó£¬Ê¹ÓÃmTable -> mapFromGlobal(QCursor::pos())µÄ°ì·¨ÎÞ·¨²¶×½×îºóÒ»ÐÐitemµÄÓÒ¼üÐÅÏ¢
+    //ËùÒÔÊ¹ÓÃmTable -> viewport() ·µ»Øµ±Ç°×ø±êµÄQWidgetÈ»ºóÔÙmapFromGlobal()»ñÈ¡itemÐÅÏ¢¡£
     QPoint point = mTable -> viewport() -> mapFromGlobal(QCursor::pos());
     QTableWidgetItem *item = mTable -> itemAt(point);
     if(item != NULL){
@@ -88,15 +95,88 @@ void DrftList::contextMenuEvent(QContextMenuEvent *event)
     }
 }
 
-//###########################
+/*
+ *SendList
+ */
+SendList::SendList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("ÊÕ¼þÈË")<<QStringLiteral("Ö÷Ìâ")<<QStringLiteral("Ê±¼ä");
+    mTable -> setHorizontalHeaderLabels(header);
+    mType = SEND;
+    mFileName = QString("send.txt");
+    this -> setBox();
+}
+
+/*
+ *DrftList
+ */
+DrftList::DrftList(QWidget *parent):MailList(parent)
+{
+    QStringList header;
+    header<<QStringLiteral("")<<QStringLiteral("ÊÕ¼þÈË")<<QStringLiteral("Ö÷Ìâ")<<QStringLiteral("Ê±¼ä");
+    mTable -> setHorizontalHeaderLabels(header);
+    mDeleAll -> setText(QStringLiteral("Çå¿Õ²Ý¸åÏä"));
+    mType = DRAFT;
+    mFileName = QString("draft.txt");
+    connect(mOpen  ,SIGNAL(triggered(bool)),this,SLOT(openDraft()));
+    connect(mDelete,SIGNAL(triggered(bool)),this,SLOT(deleDraft()));
+    connect(mDeleAll,SIGNAL(triggered(bool)),this,SLOT(clearBox()));
+    connect(mTable,SIGNAL(itemDoubleClicked(QTableWidgetItem*)),this,SLOT(openDraft()));
+    this -> setBox();
+}
+void DrftList::openDraft()
+{
+    qDebug()<<"open Draft";
+    mRow = mTable -> currentRow();
+    MailData md = mdl.at(mRow);
+    WriteMailDlg *Dlg = new WriteMailDlg();
+    connect(Dlg,SIGNAL(send(MailData&)),this,SLOT(replaceDraft(MailData&)));
+    qDebug()<<"contents.size():"<<md.contents.size();
+    Dlg -> openDraft(md);
+    Dlg -> exec();
+    delete Dlg;
+}
+void DrftList::replaceDraft(MailData &md)
+{
+    mdl.replace(mRow,md);
+    writeBoxFile("draft.txt",mdl);
+    this -> setBox();
+}
+void DrftList::deleDraft()
+{
+    int row = mTable -> currentRow();
+    mdl.removeAt(row);
+    this -> fillTable();
+    writeBoxFile("draft.txt",mdl);
+}
+
+void DrftList::contextMenuEvent(QContextMenuEvent *event)
+{
+    mPopMenu -> resize(QSize(200,180));
+    //ÓÉÓÚQTableWidget±»·ÅÈë±ðµÄQWidgetºó£¬Ê¹ÓÃmTable -> mapFromGlobal(QCursor::pos())µÄ°ì·¨ÎÞ·¨²¶×½×îºóÒ»ÐÐitemµÄÓÒ¼üÐÅÏ¢
+    //ËùÒÔÊ¹ÓÃmTable -> viewport() ·µ»Øµ±Ç°×ø±êµÄQWidgetÈ»ºóÔÙmapFromGlobal()»ñÈ¡itemÐÅÏ¢¡£
+    QPoint point = mTable -> viewport() -> mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *item = mTable -> itemAt(point);
+    if(item != NULL){
+        mPopMenu -> addAction(mOpen);
+        mPopMenu -> addAction(mDelete);
+        mPopMenu -> addAction(mDeleAll);
+
+        mPopMenu -> exec(QCursor::pos());
+        event -> accept();
+    }
+}
+
+/*
+ *DustList
+ */
 DustList::DustList(QWidget *parent):MailList(parent)
 {
     QStringList header;
-    header<<QStringLiteral("")<<QStringLiteral("æ”¶ä»¶äºº")<<QStringLiteral("ä¸»é¢˜")<<QStringLiteral("æ—¶é—´");
+    header<<QStringLiteral("")<<QStringLiteral("ÊÕ¼þÈË")<<QStringLiteral("Ö÷Ìâ")<<QStringLiteral("Ê±¼ä");
     mTable -> setHorizontalHeaderLabels(header);
-    this -> setDust();
-}
-void DustList::setDust()
-{
-
+    mType = DUST;
+    mFileName = QString("dust.txt");
+    this -> setBox();
 }

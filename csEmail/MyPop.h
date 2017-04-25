@@ -12,6 +12,7 @@
 #include <winsock.h>
 #include <windows.h>
 #include <cstdio>
+#include <iostream>
 #include "MySocket.h"
 #include "MyBase64.h"
 #include "MyQuotedPrintable.h"
@@ -24,16 +25,26 @@ using namespace std;
 class MyPop:public MySocket
 {
 private:
+	const string user;
+	const string passwd;
+	const string server;
+	const int Port;
+private:
 	bool IsOk();
-	void Print(MailData serMail);
+	bool Send(const string msg);/*发送信息*/
+	bool Send(const char *buf);
+
+	void sendStr(string m);
 public:
-	MyPop():MySocket(){};
-	virtual ~MyPop() {};
-	bool Connect(const string Serv, const int Port);
-	bool ConfirmUser(const string account, const string passwd);
-	bool GetAllMails(list<MailData>& svecMails);
-	bool DecodeMail(MailData &CurrentMail,const string revData);
-	string UTF8_To_GBK(const string & str);
-	string GBK_To_UTF8(const string &str);
+	MyPop(const string server,const int port,const string user,const string passwd):MySocket(),
+			user(user),passwd(passwd),server(server),Port(port){};
+	virtual ~MyPop() {ReleaseSocket();};
+	bool Connect();//连接服务器
+	bool ConfirmUser();//确认用户
+	bool GetAllMails(list<MailData>& svecMails,int deleteOp);//获取邮件,deleteOp==1(删除服务器邮件)
+	bool DecodeMail(MailData &CurrentMail, const string revData);
+	string UTF8_To_GBK(const string & str);//UTF8转GBK
+	string GBK_To_UTF8(const string &str);//GBK转UTF8
+	void Print(MailData serMail);
 };
 #endif

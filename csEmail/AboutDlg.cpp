@@ -1,13 +1,13 @@
-ï»¿#include "AboutDlg.h"
+#include "AboutDlg.h"
 
 AboutDlg::AboutDlg(QWidget *parent):QDialog(parent)
 {
-    mConfirm = new QPushButton(QStringLiteral("ç¡®å®š"));
+    mConfirm = new QPushButton(QStringLiteral("È·¶¨"));
     QToolButton *mbtn = new QToolButton();
     mbtn -> setStyleSheet("min-width:80px;min-height:80px;"
                           "border-image:url(:/images/icons/csEmail.png)");
     QLabel *mVerLabel = new QLabel(QStringLiteral("csEmail 1.116.1 Beta"));
-    QLabel *mAboutLabel = new QLabel(QStringLiteral("ä½œè€…ï¼š\tIyuge2 \t tel:15172502715\n"
+    QLabel *mAboutLabel = new QLabel(QStringLiteral("×÷Õß£º\tIyuge2 \t tel:15172502715\n"
                                                     "\t\t email:1223#gmail.com  \n\n"
                                                     "\tHughian\t tel:15629070792\n"
                                                     "\t\t email:760156619@qq.com"));
@@ -26,7 +26,7 @@ AboutDlg::AboutDlg(QWidget *parent):QDialog(parent)
 
     connect(mConfirm,SIGNAL(clicked(bool)),this,SLOT(on_mConfirm_clicked()));
     setWindowIcon(QIcon(":/images/icons/about.png"));
-    setWindowTitle(QStringLiteral("å…³äºŽ"));
+    setWindowTitle(QStringLiteral("¹ØÓÚ"));
     setWindowFlags(Qt::WindowCloseButtonHint);
     resize(QSize(400,300));
 }

@@ -1,174 +1,434 @@
-ï»¿#include "WriteMailDlg.h"
+#include "WriteMailDlg.h"
+#include "SendingDlg.h"
+#include "MySmtp.h"
+#include "qt.h"
+#include <QFileDialog>
+#include <fstream>
+#include <sstream>
 extern QString setData[8];
 WriteMailDlg::WriteMailDlg(QWidget *parent):QDialog(parent)
 {
-    mSave = new QPushButton(QStringLiteral("ä¿å­˜ä¸ºè‰ç¨¿"));
-    mSend = new QPushButton(QStringLiteral("å‘é€"));
-    mQuit = new QPushButton(QStringLiteral("å–æ¶ˆ"));
+    mSave  = new QPushButton(QStringLiteral("±£´æÎª²Ý¸å"));
+    mSend  = new QPushButton(QStringLiteral("·¢ËÍ"));
+    mQuit  = new QPushButton(QStringLiteral("È¡Ïû"));
+    mAttach= new QPushButton(QStringLiteral("Ìí¼Ó¸½¼þ"));
+    mPhoto = new QPushButton(QStringLiteral("ÕÕÆ¬"));
+    mBcc   = new QPushButton(QStringLiteral("Ìí¼ÓÃÜËÍ"));
+    mCC    = new QPushButton(QStringLiteral("Ìí¼Ó³­ËÍ"));
     mRecvEdit = new QLineEdit();
+    mBccEdit  = new QLineEdit();
+    mCCEdit   = new QLineEdit();
     mSubsEdit = new QLineEdit();
     mCtntEdit = new QTextEdit();
     mDraftEdited = false;
     mDraftorMail = false; // default as mail
-    QLabel *mRecvLabel = new QLabel(QStringLiteral("æ”¶ä»¶äºº"));
-    QLabel *mTipsLabel = new QLabel(QStringLiteral("è‹¥å¤šä¸ªæ”¶ä»¶äººï¼Œæ”¶ä»¶äººåœ°å€ä¹‹é—´è¯·ç”¨åˆ†å·';'éš”å¼€.ä¾‹å¦‚760156619@qq.com;Hughian@gmail.com"));
-    QLabel *mSubsLabel = new QLabel(QStringLiteral("ä¸»é¢˜"));
-    QLabel *mCtntLabel = new QLabel(QStringLiteral("æ­£æ–‡"));
-    QGridLayout *mainLyt = new QGridLayout(this);
-    mainLyt -> addWidget(mRecvLabel,0,1);
-    mainLyt -> addWidget(mRecvEdit ,0,2,1,4);
-    mainLyt -> addWidget(mTipsLabel,1,2,1,4);
-    mainLyt -> addWidget(mSubsLabel,2,1);
-    mainLyt -> addWidget(mSubsEdit ,2,2,1,4);
-    mainLyt -> addWidget(mCtntLabel,3,1,Qt::AlignTop);
-    mainLyt -> addWidget(mCtntEdit ,3,2,1,4);
-    mainLyt -> addWidget(mSend,4,3,Qt::AlignCenter);
-    mainLyt -> addWidget(mSave,4,4,Qt::AlignRight);
-    mainLyt -> addWidget(mQuit,4,5,Qt::AlignLeft);
+    mRecvLabel = new QLabel(QStringLiteral("ÊÕ¼þÈË"));
+    mTipsLabel = new QLabel(QStringLiteral("Èô¶à¸öÊÕ¼þÈË£¬ÊÕ¼þÈËµØÖ·Ö®¼äÇëÓÃ·ÖºÅ';'¸ô¿ª.ÀýÈç760156619@qq.com;Hughian@gmail.com"));
+    mSubsLabel = new QLabel(QStringLiteral("Ö÷Ìâ"));
+    mCtntLabel = new QLabel(QStringLiteral("ÕýÎÄ"));
+    mBccLabel  = new QLabel(QStringLiteral("ÃÜËÍ"));
+    mCCLabel   = new QLabel(QStringLiteral("³­ËÍ"));
+    //mCtntEdit -> append("<img src = E://right.png>");
+    mAttach -> setFlat(true);
+    mPhoto  -> setFlat(true);
+    mBcc    -> setFlat(true);
+    mCC     -> setFlat(true);
+    //mAttach -> setFocusPolicy(Qt::NoFocus);
+    mAttach -> setStyleSheet({"QPushButton{border:none;color:blue;}"
+                              "QPushButton:hover{text-decoration: underline;}"
+                              "QPushButton:pressed{}"});
+    mPhoto  -> setStyleSheet({"QPushButton{border:none;color:blue;}"
+                              "QPushButton:hover{text-decoration: underline;}"
+                              "QPushButton:pressed{}"});
+    mBcc    -> setStyleSheet({"QPushButton{border:none;color:blue;}"
+                              "QPushButton:hover{text-decoration: underline;}"
+                              "QPushButton:pressed{}"});
+    mCC     -> setStyleSheet({"QPushButton{border:none;color:blue;}"
+                              "QPushButton:hover{text-decoration: underline;}"
+                              "QPushButton:pressed{}"});
+    mSend   -> setDefault(true);
+    mainLyt = new QGridLayout(this);
+    ki = 0; mi = 0;
+    kj = 0; mj = 0;
+    bbci = false;
+    bcci = false;
+    bj = false;
+    setLyt();
+    connect(mSend,SIGNAL(clicked(bool)),this,SLOT(sendEmail()));
+    connect(mSave,SIGNAL(clicked(bool)),this,SLOT(save()));
+    connect(mQuit,SIGNAL(clicked(bool)),this,SLOT(close()));
+
+    connect(mAttach,SIGNAL(clicked(bool)),this,SLOT(attachFile()));
+    connect(mPhoto,SIGNAL(clicked(bool)),this,SLOT(addPic()));
+    connect(mBcc,SIGNAL(clicked(bool)),this,SLOT(addBcc()));
+    connect(mCC,SIGNAL(clicked(bool)),this,SLOT(addCC()));
+    connect(mRecvEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
+    connect(mSubsEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
+    connect(mCtntEdit,SIGNAL(textChanged()),this,SLOT(setFlag()));
+    setWindowIcon(QIcon(":/images/icons/write_2.png"));
+    setWindowTitle(QStringLiteral("Ð´ÐÅ"));
+    setWindowFlags(Qt::WindowCloseButtonHint);
+    resize(QSize(800,600));
+}
+void WriteMailDlg::setLyt(int i,int j)
+{
+    mi = i;
+    mj = j;
+    switch (i) {
+    case 0:
+        break;
+    case 1:
+        ki++;
+        mainLyt -> addWidget(mBccLabel ,ki,1,Qt::AlignLeft);
+        mainLyt -> addWidget(mBccEdit ,ki,2,1,5);
+        mBccLabel -> show();
+        mBccEdit  -> show();
+        mBcc->setText(QStringLiteral("È¡ÏûÃÜËÍ"));
+        //
+        break;
+    case 2:
+        ki++;
+        mainLyt -> addWidget(mCCLabel ,ki,1,Qt::AlignLeft);
+        mainLyt -> addWidget(mCCEdit ,ki,2,1,5);
+        mCCLabel -> show();
+        mCCEdit  -> show();
+        mCC->setText(QStringLiteral("È¡Ïû³­ËÍ"));
+        break;
+    case 3:
+        if(ki == 2)
+        {
+            mainLyt -> addWidget(mCCLabel ,1,1,Qt::AlignLeft);
+            mainLyt -> addWidget(mCCEdit ,1,2,1,5);
+            mCCLabel -> show();
+            mCCEdit  -> show();
+            mCC->setText(QStringLiteral("È¡Ïû³­ËÍ"));
+        }
+        ki--;
+        mainLyt -> removeWidget(mBccLabel);
+        mainLyt -> removeWidget(mBccEdit);
+        mBccLabel -> hide();
+        mBccEdit  -> hide();
+        mBccEdit  -> setText("");
+        mBcc->setText(QStringLiteral("Ìí¼ÓÃÜËÍ"));
+        break;
+    case 4:
+        //mainLyt -> setRowStretch(ki,0);
+        if(ki == 2)
+        {
+            mainLyt -> addWidget(mBccLabel ,1,1,Qt::AlignLeft);
+            mainLyt -> addWidget(mBccEdit ,1,2,1,5);
+            mBccLabel -> show();
+            mBccEdit  -> show();
+            mBcc->setText(QStringLiteral("È¡ÏûÃÜËÍ"));
+        }
+        ki--;
+        mainLyt -> removeWidget(mCCLabel);
+        mainLyt -> removeWidget(mCCEdit);
+        mCCLabel -> hide();
+        mCCEdit  -> hide();
+        mCCEdit  -> setText("");
+        mCC->setText(QStringLiteral("Ìí¼Ó³­ËÍ"));
+        break;
+    default:
+        break;
+    }
+    switch (j) {
+    case 0:
+        break;
+    case 1:
+        kj++;
+        QLabel *attachLabel = new QLabel(fileName);
+        mainLyt -> addWidget(attachLabel,3+ki+1,2,Qt::AlignRight);
+        break;
+//    default:
+//        break;
+    }
+    //
+    mainLyt -> addWidget(mRecvLabel,0,1,Qt::AlignLeft);
+    mainLyt -> addWidget(mRecvEdit ,0,2,1,5);
+    //
+
+    mainLyt -> addWidget(mBcc      ,1+ki,2,Qt::AlignRight);
+    mainLyt -> addWidget(mCC       ,1+ki,3,Qt::AlignLeft);
+    mainLyt -> addWidget(mTipsLabel,1+ki,4,1,3);
+    //
+    mainLyt -> addWidget(mSubsLabel,2+ki,1,Qt::AlignLeft);
+    mainLyt -> addWidget(mSubsEdit ,2+ki,2,1,5);
+    //
+    mainLyt -> addWidget(mAttach   ,3+ki,2,Qt::AlignRight);
+    mainLyt -> addWidget(mPhoto    ,3+ki,3,Qt::AlignLeft);
+    //
+    mainLyt -> addWidget(mCtntLabel,4+ki+kj,1,Qt::AlignTop|Qt::AlignLeft);
+    mainLyt -> addWidget(mCtntEdit ,4+ki+kj,2,1,5);
+    //
+    mainLyt -> addWidget(mSend     ,5+ki+kj,4,Qt::AlignCenter);
+    mainLyt -> addWidget(mSave     ,5+ki+kj,5,Qt::AlignRight);
+    mainLyt -> addWidget(mQuit     ,5+ki+kj,6,Qt::AlignLeft);
+
     mainLyt -> setVerticalSpacing(10);
-    mainLyt -> setColumnStretch(0,1);
+    mainLyt -> setColumnStretch(0,2);
     mainLyt -> setColumnStretch(1,1);
     mainLyt -> setColumnStretch(2,6);
     mainLyt -> setColumnStretch(3,12);
     mainLyt -> setColumnStretch(4,1);
     mainLyt -> setColumnStretch(5,1);
     mainLyt -> setColumnStretch(6,1);
+    mainLyt -> setColumnStretch(7,2);
     mainLyt -> setRowStretch(0,1);
-    mainLyt -> setRowStretch(1,0);
-    mainLyt -> setRowStretch(2,1);
-    mainLyt -> setRowStretch(3,12);
-    mainLyt -> setRowStretch(4,1);
+    for(int n=0;n<ki;n++)
+    {
+        mainLyt -> setRowStretch(1+n,1);
+    }
+    mainLyt -> setRowStretch(1+ki,1);
+    mainLyt -> setRowStretch(2+ki,1);
+    mainLyt -> setRowStretch(3+ki,1);
+    for(int m=0;m<kj;m++)
+    {
+        mainLyt -> setRowStretch(4+ki+m,1);
+    }
+    mainLyt -> setRowStretch(4+ki+kj,12);
+    mainLyt -> setRowStretch(5+ki+kj,1);
+    for(int m=5+ki+kj;m<mainLyt->rowCount();m++)
+    {
+        mainLyt -> setRowStretch(m,0);
+    }
     mainLyt -> setContentsMargins(0,30,0,15);
-
-    connect(mSend,SIGNAL(clicked(bool)),this,SLOT(sendEmail()));
-    connect(mSave,SIGNAL(clicked(bool)),this,SLOT(save()));
-    connect(mQuit,SIGNAL(clicked(bool)),this,SLOT(close()));
-
-    connect(mRecvEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
-    connect(mSubsEdit,SIGNAL(textEdited(QString)),this,SLOT(setFlag()));
-    connect(mCtntEdit,SIGNAL(textChanged()),this,SLOT(setFlag()));
-    setWindowIcon(QIcon(":/images/icons/write_2.png"));
-    setWindowTitle(QStringLiteral("å†™ä¿¡"));
-    setWindowFlags(Qt::WindowCloseButtonHint);
-    resize(QSize(800,600));
 }
-void WriteMailDlg::change()
+
+void WriteMailDlg::attachFile()
 {
-    qDebug()<<"change";
+    QString filepath = QFileDialog::getOpenFileName(this,QStringLiteral("Ìí¼Ó¸½¼þ"),".",\
+            QStringLiteral("ËùÓÐÎÄ¼þ(*.*);;ÎÄ±¾ÎÄ¼þ(*.txt);;HTMLÎÄ¼þ(*.html);;Í¼Æ¬ÎÄ¼þ(*.jpeg *.jpg *.png)"));
+    if(filepath != 0)
+    {
+        qDebug()<<filepath;
+        QStringList qsl = filepath.split("/",QString::SkipEmptyParts);
+        qDebug()<<qsl;
+        fileName = qsl.at(qsl.size()-1);
+//        filepath.indexOf()
+//        QFile file(filepath);
+//        if(!file.open(QIODevice::ReadOnly))
+//        {
+//            QMessageBox::warning(this,QStringLiteral("¾¯¸æ"),QStringLiteral("ÎÞ·¨´ò¿ªÎÄ¼þ\n")+filepath,QMessageBox::Yes);
+//            return ;
+//        }
+        ifstream file;
+        file.open(filepath.toStdString().c_str(),ios::binary|ios::in);
+        if(!file){
+            QMessageBox::warning(this,QStringLiteral("¾¯¸æ"),QStringLiteral("ÎÞ·¨´ò¿ªÎÄ¼þ\n")+filepath,QMessageBox::Yes);
+            return ;
+        }
+        stringstream  buf;
+        buf << file.rdbuf();
+        string content(buf.str());
+        qDebug("%s",content.c_str());
+        Contents ctns;
+        ctns.type = 4;
+        ctns.name = fileName.toStdString();
+        ctns.content = content;
+        mCtnsDeque.push_back(ctns);
+        setLyt(mi,1);
+    }
 }
-void WriteMailDlg::edit()
+void WriteMailDlg::addPic()
 {
-    qDebug()<<"edit";
+    QString filepath = QFileDialog::getOpenFileName(this,QStringLiteral("Ìí¼Ó¸½¼þ"),".",\
+            QStringLiteral("Í¼Æ¬ÎÄ¼þ(*.jpeg *.jpg *.png)"));
+    QStringList qsl = filepath.split("/",QString::SkipEmptyParts);
+    fileName = qsl.at(qsl.size()-1);
+    if(filepath != 0)
+    {
+        QString str = "<img src = "+filepath + ">";
+        mCtntEdit -> append(str);
+        ifstream file;
+        file.open(filepath.toStdString().c_str(),ios::binary|ios::in);
+        if(!file){
+            QMessageBox::warning(this,QStringLiteral("¾¯¸æ"),QStringLiteral("ÎÞ·¨´ò¿ªÎÄ¼þ\n")+filepath,QMessageBox::Yes);
+            return ;
+        }
+        stringstream  buf;
+        buf << file.rdbuf();
+        string content(buf.str());
+        Contents ctns;
+        ctns.type = 3;
+        ctns.name = fileName.toStdString();
+        ctns.content = content;
+        mCtnsDeque.push_back(ctns);
+    }
+}
+
+void WriteMailDlg::addBcc()
+{
+    if(!bbci){
+        setLyt(1,mj);
+    }
+    else{
+        setLyt(3,mj);
+
+    }
+    bbci = !bbci;
+}
+void WriteMailDlg::addCC()
+{
+    if(!bcci){
+        setLyt(2,mj);
+    }
+    else{
+        setLyt(4,mj);
+    }
+    bcci = !bcci;
+}
+void WriteMailDlg::replaceSave()
+{
+    MailData md = mMD;//»ñÈ¡Ô­²Ý¸åÐÅÏ¢
+    Contents ctns;
+    md.dstAddr = QString2dstr(mRecvEdit->text());
+    md.subject = mSubsEdit->text().toStdString();
+    md.contents.clear();
+    md.contents=mCtnsDeque;
+    md.contents.push_back(ctns);
+    send(md);
 }
 void WriteMailDlg::setFlag()
 {
+    QString dstStr = dstr2QString(mMD.dstAddr);
+    QString str;
     if(mDraftorMail){
-        if(mQsl.at(1)==mRecvEdit->text() && mQsl.at(3)==mSubsEdit->text() && mQsl.at(4)==mCtntEdit->toPlainText())
-        {   mDraftEdited = false;   qDebug()<<"f";}
+        if(dstStr==mRecvEdit->text() && str.fromStdString(mMD.subject)==mSubsEdit->text() && cmpContents())
+        {   mDraftEdited = false;}
         else
-        {   mDraftEdited = true;    qDebug()<<"t";}
+        {   mDraftEdited = true;}
     }
 }
-void WriteMailDlg::readEdits(MailData &md)
+
+bool WriteMailDlg::cmpContents()
+{
+    Contents ctns;
+    for(int i =0;i<mMD.contents.size();i++)
+    {
+        ctns = mMD.contents.at(i);
+        switch (ctns.type) {
+        case 1:
+            if(QString::fromStdString(ctns.content) != mCtntEdit -> toPlainText())
+                return false;
+            break;
+        case 2:
+            if(QString::fromStdString(ctns.content) != mCtntEdit -> toHtml())
+                return false;
+            break;
+        }
+    }
+    return true;
+}
+
+void WriteMailDlg::readEdits()
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    QStringList qsl;
-    QString str;
-    md.srcAddr = setData[1].toStdString();
-    md.sender  = setData[0].toStdString();
-    md.subject = mSubsEdit->text().toStdString();
-    //md.contents= mCtntEdit->toPlainText().toStdString();
-    md.time  = currentTime.toString("yyyy-MM-dd hh:mm:ss").toStdString();
-    qsl = mRecvEdit->text().split(";",QString::SkipEmptyParts);
-    for(QStringList::Iterator it = qsl.begin();it != qsl.end();it++){
-        str = *it;
-        md.dstAddr.push_back(str.toStdString());
+    Contents ctns;
+    mMD.ID = "";
+    mMD.srcAddr = setData[Account].toStdString();
+    mMD.sender  = setData[usrName].toStdString();
+    mMD.subject = mSubsEdit->text().toStdString();
+    ctns.type = 1;  ////////
+    ctns.name = ""; ////////
+    ctns.content = mCtntEdit -> toPlainText().toStdString();
+    mCtnsDeque.push_back(ctns);
+    mMD.contents =  mCtnsDeque;
+    mMD.time    = currentTime.toString("yyyy-MM-dd hh:mm:ss").toStdString();
+    mMD.dstAddr=QString2dstr(mRecvEdit->text(),1);
+    deque<string> ds;
+    string s;
+    if(bbci){
+        ds = QString2dstr(mBccEdit->text(),3);
+        while(!ds.empty()){
+            s = ds.back();
+            ds.pop_back();
+            mMD.dstAddr.push_back(s);
+        }
     }
+    if(bcci){
+        ds = QString2dstr(mCCEdit->text(),2);
+        while(!ds.empty()){
+            s= ds.back();
+            ds.pop_back();
+            mMD.dstAddr.push_back(s);
+        }
+    }
+    qDebug()<<dstr2QString(mMD.dstAddr);
 }
-void WriteMailDlg::openDraft(QStringList &qsl)
+void WriteMailDlg::openDraft(MailData &md)
 {
-    mQsl = qsl;
-    mRecvEdit->setText(qsl.at(1));
-    mSubsEdit->setText(qsl.at(3));
-    mCtntEdit->setText(qsl.at(4));
+    mMD = md;
+    QString str;
+    Contents ctns;
+    mRecvEdit->setText(dstr2QString(md.dstAddr));
+    mSubsEdit->setText(str.fromStdString(md.subject));
+    for(deque<Contents>::iterator it = md.contents.begin();it != md.contents.end();it++)
+    {
+        ctns = *it;
+        switch (ctns.type) {
+        case 1: //plian text
+            mCtntEdit ->insertPlainText(str.fromStdString(ctns.content));
+            break;
+        case 2: //html
+            mCtntEdit ->insertHtml(str.fromStdString(ctns.content));
+            break;
+        case 3: //image
+            break;
+        case 4: //attach
+            break;
+        default:
+            break;
+        }
+    }
+
     mDraftorMail = true;
     mDraftEdited = false;
 }
 void WriteMailDlg::sendEmail()
 {
-    MailData md;
-    this->readEdits(md);
-    QStringList qsl;
-    md.toQStringList(qsl);
-    qDebug()<<qsl;
-//    MsgBox *msg = new MsgBox();
-//    msg->show();
+    this->readEdits();
+    if(checkEdit())
+    {
+        QMessageBox::warning(this,QStringLiteral("ÐÅÏ¢Îª¿Õ"),QStringLiteral("Î´ÊäÈëÈÎºÎÓÊ¼þÐÅÏ¢£¡"),QMessageBox::NoButton);
+        return;
+    }
     /*
-     * here is where the messages will be send ;
-     * call send() to mail the MailData md;
-     * function send() to check the data completeness;
+     * here is where the messages will be send;
+     * SendingDlg.smtp send md to dstAddr;
      */
+    SendingDlg dlg(mMD);
 
-    QMessageBox::information(this,QStringLiteral("å‘é€é‚®ä»¶"),QStringLiteral("é‚®ä»¶å‘é€æˆåŠŸ"),QMessageBox::NoButton);
-    accept();
+    if(dlg.exec() == QDialog::Accepted)
+        accept();
 }
 void WriteMailDlg::saveDraft()
 {
-    QFile file("../csEmail/data/draft.txt");
-    QStringList qsl;
-    QString str;
-    MailData md;
-    if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
-    {
-        QMessageBox::warning(this,QStringLiteral("è­¦å‘Š"),QStringLiteral("æ— æ³•æ‰“å¼€æ–‡ä»¶draft.txt"),QMessageBox::Yes);
-        accept();
-    }
-    QDataStream stream(&file);
-    this -> readEdits(md);
-    md.toQStringList(qsl);
-    str = qsl.at(4);
-    str.replace("\n","$#$");
-    qsl.replace(4,str);
-    qDebug()<<str;
-    str = qsl.join("\n");
-    stream<<str;
-    file.close();
-    QMessageBox::information(this,QStringLiteral("å­˜è‰ç¨¿"),QStringLiteral("è‰ç¨¿ä¿å­˜æˆåŠŸ"),QMessageBox::Ok);
+    this -> readEdits();
+    appendBoxFile("draft.txt",mMD);
+    QMessageBox::information(this,QStringLiteral("´æ²Ý¸å"),QStringLiteral("²Ý¸å±£´æ³É¹¦"),QMessageBox::Ok);
 }
 void WriteMailDlg::save()
 {
 
     bool editsEmpty = checkEdit();
-    qDebug()<<"123"<<editsEmpty<<mDraftEdited<<mDraftorMail;
     if(!mDraftorMail && editsEmpty)
-        QMessageBox::warning(this,QStringLiteral("ä¿¡æ¯ä¸ºç©º"),QStringLiteral("æœªè¾“å…¥ä»»ä½•é‚®ä»¶ä¿¡æ¯ï¼"),QMessageBox::NoButton);
+        QMessageBox::warning(this,QStringLiteral("ÐÅÏ¢Îª¿Õ"),QStringLiteral("Î´ÊäÈëÈÎºÎÓÊ¼þÐÅÏ¢£¡"),QMessageBox::NoButton);
     else if(!mDraftorMail && !editsEmpty){
         this -> saveDraft();
         accept();
     }
     else if(mDraftorMail && !mDraftEdited){
-        //qDebug()<<"456"<<QStringLiteral("è‰ç¨¿æ²¡æœ‰ç¼–è¾‘ï¼Œä¸ç”¨å¤„ç†");//è‰ç¨¿æ²¡æœ‰ç¼–è¾‘ï¼Œä¸ç”¨å¤„ç†
-        QMessageBox::warning(this,QStringLiteral("å­˜è‰ç¨¿"),QStringLiteral("è‰ç¨¿ä¿å­˜æˆåŠŸ"),QMessageBox::Ok);
+        QMessageBox::warning(this,QStringLiteral("´æ²Ý¸å"),QStringLiteral("²Ý¸å±£´æ³É¹¦"),QMessageBox::Ok);
         accept();
     }
-    else{//è‰ç¨¿æœ‰ç¼–è¾‘,æ˜¯å¦è¢«åˆ ç©º
-        if(editsEmpty){
-            if(QMessageBox::warning(this,QStringLiteral("ä¿¡æ¯ä¸ºç©º"),QStringLiteral("æ˜¯å¦ä¸¢å¼ƒåŽŸè‰ç¨¿ï¼"),QMessageBox::Yes|QMessageBox::No)==QMessageBox::Yes)
-            {
-                //this->delte();
-                accept();
-            }else{
-                accept();
-            }
-            qDebug()<<"789"<<QStringLiteral("åˆ ç©ºï¼Œæ˜¯å¦ä¸¢å¼ƒè¯¥è‰ç¨¿ï¼Ÿ");//åˆ ç©ºï¼Œæ˜¯å¦ä¸¢å¼ƒè¯¥è‰ç¨¿ï¼Ÿ
-        }
-        else{
-            if(QMessageBox::warning(this,QStringLiteral("ä¿å­˜è‰ç¨¿"),QStringLiteral("æ˜¯å¦è¦†ç›–åŽŸè‰ç¨¿ï¼"),QMessageBox::Yes|QMessageBox::No)==QMessageBox::Yes)
-            {
-                //this->replace();
-                accept();
-            }
-            qDebug()<<"000"<<QStringLiteral("è‰ç¨¿å·²ç»å­˜åœ¨æ˜¯å¦æ›¿æ¢ï¼Ÿ");//è‰ç¨¿å·²ç»å­˜åœ¨æ˜¯å¦æ›¿æ¢ï¼Ÿ
+    else{//²Ý¸åÓÐ±à¼­,ÊÇ·ñ±»¸²¸Ç
+        if(QMessageBox::warning(this,QStringLiteral("´æ²Ý¸å"),QStringLiteral("ÊÇ·ñ¸²¸ÇÔ­²Ý¸å£¡"),QMessageBox::Yes|QMessageBox::No)==QMessageBox::Yes)
+        {
+            this->replaceSave();
+            accept();
+        }else{
+            accept();
         }
     }
 }
@@ -182,18 +442,13 @@ bool WriteMailDlg::checkEdit()
 
 void WriteMailDlg::closeEvent(QCloseEvent *event)
 {
-    if(mDraftorMail && !mDraftEdited){
+    if(mDraftorMail){
         accept();
-    }
-    else if(mDraftorMail && mDraftEdited)
-    {
-        this -> save();
-        qDebug()<<QStringLiteral("è‰ç¨¿ä¿®æ”¹");
     }else{
         if(checkEdit())
             event -> accept();
         else{
-            if(QMessageBox::warning(this,QStringLiteral("é€€å‡ºå†™ä¿¡"),QStringLiteral("æ˜¯å¦ä¿å­˜è‰ç¨¿ï¼Ÿ"),QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
+            if(QMessageBox::warning(this,QStringLiteral("ÍË³öÐ´ÐÅ"),QStringLiteral("ÊÇ·ñ±£´æ²Ý¸å£¿"),QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
             {
                 this->saveDraft();
                 event->accept();
@@ -204,3 +459,4 @@ void WriteMailDlg::closeEvent(QCloseEvent *event)
         }
     }
 }
+

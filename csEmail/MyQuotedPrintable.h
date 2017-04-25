@@ -13,5 +13,5 @@ protected:
 public:
 	string Decode(string toDecode);
 };
-#endif // !_MYQUOTEDPRINTBLE
+#endif
 

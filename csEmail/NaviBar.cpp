@@ -1,4 +1,4 @@
-ï»¿#include "NaviBar.h"
+#include "NaviBar.h"
 
 ToolBtn::ToolBtn(QString name,QString str,QWidget *parent):QWidget(parent)
 {
@@ -18,14 +18,14 @@ NaviBar::NaviBar(int a,QWidget *parent):QWidget(parent)
     setStyleSheet("QToolButton{min-width:40px;min-height:40px;} \
                    QToolButton:hover{border-style:solid;border:4px;}\
                    QTollButton:pressed{background:red;}");
-    ToolBtn *mWriteMail = new ToolBtn(QStringLiteral("å†™ã€€ä¿¡"),"border-image:url(:/images/icons/write_2.png)",this);
-    ToolBtn *mSettings  = new ToolBtn(QStringLiteral("è®¾ã€€ç½®"),"border-image:url(:/images/icons/settings.png)",this);
-    ToolBtn *mContacts  = new ToolBtn(QStringLiteral("è”ç³»äºº"),"border-image:url(:/images/icons/contacts.png)",this);
-    ToolBtn *mRecvBox   = new ToolBtn(QStringLiteral("æ”¶ä»¶ç®±"),"border-image:url(:/images/icons/recv.png)",this);
-    ToolBtn *mSendBox   = new ToolBtn(QStringLiteral("å·²å‘é€"),"border-image:url(:/images/icons/send.png)",this);
-    ToolBtn *mDraftBox  = new ToolBtn(QStringLiteral("è‰ç¨¿ç®±"),"border-image:url(:/images/icons/draftbox.png)",this);
-    ToolBtn *mDustBin   = new ToolBtn(QStringLiteral("åƒåœ¾ç®±"),"border-image:url(:/images/icons/dustbin.png)",this);
-    ToolBtn *mAbout     = new ToolBtn(QStringLiteral("å…³ã€€äº"),"border-image:url(:/images/icons/about.png)",this);
+    ToolBtn *mWriteMail = new ToolBtn(QStringLiteral("Ğ´¡¡ĞÅ"),"border-image:url(:/images/icons/write_2.png)",this);
+    ToolBtn *mSettings  = new ToolBtn(QStringLiteral("Éè¡¡ÖÃ"),"border-image:url(:/images/icons/settings.png)",this);
+    ToolBtn *mContacts  = new ToolBtn(QStringLiteral("ÁªÏµÈË"),"border-image:url(:/images/icons/contacts.png)",this);
+    ToolBtn *mRecvBox   = new ToolBtn(QStringLiteral("ÊÕ¼şÏä"),"border-image:url(:/images/icons/recv.png)",this);
+    ToolBtn *mSendBox   = new ToolBtn(QStringLiteral("ÒÑ·¢ËÍ"),"border-image:url(:/images/icons/send.png)",this);
+    ToolBtn *mDraftBox  = new ToolBtn(QStringLiteral("²İ¸åÏä"),"border-image:url(:/images/icons/draftbox.png)",this);
+    ToolBtn *mDustBin   = new ToolBtn(QStringLiteral("À¬»øÏä"),"border-image:url(:/images/icons/dustbin.png)",this);
+    ToolBtn *mAbout     = new ToolBtn(QStringLiteral("¹Ø¡¡ÓÚ"),"border-image:url(:/images/icons/about.png)",this);
     QVBoxLayout *mainLyt = new QVBoxLayout(this);
     mainLyt -> addWidget(mWriteMail);
     mainLyt -> addWidget(mSettings);
@@ -43,43 +43,43 @@ NaviBar::NaviBar(QWidget *parent):QWidget(parent)
     mWriteMail = new QToolButton();
     mWriteMail-> setIcon(QIcon(":/images/icons/write_2.png"));
     mWriteMail-> setIconSize(btnsize);
-    mWriteMail-> setText(QStringLiteral("å†™ã€€ä¿¡"));
+    mWriteMail-> setText(QStringLiteral("Ğ´¡¡ĞÅ"));
     mWriteMail-> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     mContacts = new QToolButton();
     mContacts -> setIcon(QIcon(":/images/icons/contacts.png"));
     mContacts -> setIconSize(btnsize);
-    mContacts -> setText(QStringLiteral("è”ç³»äºº"));
+    mContacts -> setText(QStringLiteral("ÁªÏµÈË"));
     mContacts -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mRecvBox  = new QToolButton();
     mRecvBox -> setIcon(QIcon(":/images/icons/recv.png"));
     mRecvBox -> setIconSize(btnsize);
-    mRecvBox -> setText(QStringLiteral("æ”¶ä»¶ç®±"));
+    mRecvBox -> setText(QStringLiteral("ÊÕ¼şÏä"));
     mRecvBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mSendBox  = new QToolButton();
     mSendBox -> setIcon(QIcon(":/images/icons/send.png"));
     mSendBox -> setIconSize(btnsize);
-    mSendBox -> setText(QStringLiteral("å·²å‘é€"));
+    mSendBox -> setText(QStringLiteral("ÒÑ·¢ËÍ"));
     mSendBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mDraftBox = new QToolButton();
     mDraftBox -> setIcon(QIcon(":/images/icons/draftbox.png"));
     mDraftBox -> setIconSize(btnsize);
-    mDraftBox -> setText(QStringLiteral("è‰ç¨¿ç®±"));
+    mDraftBox -> setText(QStringLiteral("²İ¸åÏä"));
     mDraftBox -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mDustBin  = new QToolButton();
     mDustBin -> setIcon(QIcon(":/images/icons/dustbin.png"));
     mDustBin -> setIconSize(btnsize);
-    mDustBin -> setText(QStringLiteral("åƒåœ¾ç®±"));
+    mDustBin -> setText(QStringLiteral("À¬»øÏä"));
     mDustBin -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mSettings = new QToolButton();
     mSettings  -> setIcon(QIcon(":/images/icons/settings.png"));
     mSettings  -> setIconSize(btnsize);
-    mSettings  -> setText(QStringLiteral("è®¾ã€€ç½®"));
+    mSettings  -> setText(QStringLiteral("Éè¡¡ÖÃ"));
     mSettings  -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     mAbout    = new QToolButton();
     mAbout -> setIcon(QIcon(":/images/icons/about.png"));
     mAbout -> setIconSize(btnsize);
-    mAbout -> setText(QStringLiteral("å…³ã€€äº"));
+    mAbout -> setText(QStringLiteral("¹Ø¡¡ÓÚ"));
     mAbout -> setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     QVBoxLayout *mainLyt = new QVBoxLayout(this);
     mainLyt -> addWidget(mWriteMail);

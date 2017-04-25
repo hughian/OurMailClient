@@ -1,12 +1,12 @@
-ï»¿#include "QMainWin.h"
+#include "QMainWin.h"
 #include "WriteMailDlg.h"
 #include "Settings.h"
 #include "AboutDlg.h"
-QString setData[8];
+QString setData[9];
 QMainWin::QMainWin(QWidget *parent)
     : QWidget(parent)
 {
-    mBoxLabel  = new QLabel(QStringLiteral("æ”¶ä»¶ç®±"));
+    mBoxLabel  = new QLabel(QStringLiteral("ÊÕ¼şÏä"));
     mainLyt    = new QGridLayout(this);
     mNaviBar   = new NaviBar(this);
     mRecvTable = new RecvList(this);
@@ -49,24 +49,25 @@ void QMainWin::Write()
 void QMainWin::Recv()
 {
     mStackWid  -> setCurrentIndex(RECV);
-    mRecvTable -> setRecv();
-    mBoxLabel  -> setText(QStringLiteral("æ”¶ä»¶ç®±"));
+    mRecvTable -> recvMail();
+    mRecvTable -> setBox();  ///here are some questions needed to be dealt with
+    mBoxLabel  -> setText(QStringLiteral("ÊÕ¼şÏä"));
 }
 void QMainWin::Send()
 {
     mStackWid  -> setCurrentIndex(SEND);
-    mSendTable -> setSend();
-    mBoxLabel  -> setText(QStringLiteral("å·²å‘é€"));
+    mSendTable -> setBox();
+    mBoxLabel  -> setText(QStringLiteral("ÒÑ·¢ËÍ"));
 }
 void QMainWin::Draft(){
     mStackWid  -> setCurrentIndex(DRAFT);
-    mDrftTable -> setDraft();
-    mBoxLabel  -> setText(QStringLiteral("è‰ç¨¿ç®±"));
+    mDrftTable -> setBox();
+    mBoxLabel  -> setText(QStringLiteral("²İ¸åÏä"));
 }
 void QMainWin::Dust(){
     mStackWid  -> setCurrentIndex(DUST);
-    mDustTable -> setDust();
-    mBoxLabel  -> setText(QStringLiteral("åƒåœ¾ç®±"));
+    mDustTable -> setBox();
+    mBoxLabel  -> setText(QStringLiteral("À¬»øÏä"));
 }
 void QMainWin::Settings(){
     SettingsDlg Dlg;

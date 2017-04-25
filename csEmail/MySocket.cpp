@@ -1,10 +1,5 @@
-/*
-* author: iyuge2
-* create-time: 2017/04/13 19:40
-* update-time: 2017/04/15 20:30
-* function: complete smtp class
-*/
 #include"MySocket.h"
+
 bool MySocket::CreateSocket()
 {
 	if (WSAStartup(0x0101, &myWsaData) == SOCKET_ERROR)
@@ -67,7 +62,7 @@ bool MySocket::Connect(const string Smtp, const int Port)
 	mySockAddrIn.sin_addr.S_un.S_addr = *(ULONG *)remoteHost->h_addr_list[0];
 	//连接服务器
 	int timeout = 600;
-	while (timeout && (connect(mySocket, (LPSOCKADDR)&mySockAddrIn, sizeof(mySockAddrIn)) == SOCKET_ERROR))
+    while (timeout && (::connect(mySocket, (LPSOCKADDR)&mySockAddrIn, sizeof(mySockAddrIn)) == SOCKET_ERROR))
 	{
 		timeout--;
 		if (!timeout)

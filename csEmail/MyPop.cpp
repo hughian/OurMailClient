@@ -1,14 +1,32 @@
-/*
-* author: iyuge2
-* create-time: 2017/04/15 20:39
-* update-time:
-* function: define smtp header file
-*/
 #include "MyPop.h"
-#include "structdef.h"
-#include <iostream>
 
 #define BUF_LENTH 1024
+#define MAIL_LENTH 102400
+
+void MyPop::sendStr(string m)
+{
+	cout << m << endl;
+}
+
+bool MyPop::Send(const string msg)
+{
+	sendStr(msg);
+	if (send(mySocket, msg.c_str() , msg.length(), 0) == SOCKET_ERROR)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+bool MyPop::Send(const char* buf)
+{
+	sendStr(string(buf));
+	if (send(mySocket,buf,strlen(buf), 0) == SOCKET_ERROR)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
 
 bool MyPop::IsOk()
 {
@@ -16,13 +34,13 @@ bool MyPop::IsOk()
 	if (recv(mySocket, Buf, 1024, 0) == SOCKET_ERROR)
 		return false;
 	Sleep(50);
-	std::cout << Buf << endl;
+	sendStr(string(Buf));
 	return (strncmp(Buf, "+OK", 3)) ? FALSE : TRUE;
 }
 
-bool MyPop::Connect(const string Serv, const int Port)
+bool MyPop::Connect()
 {
-	if (!MySocket::Connect(Serv, Port))//连接服务器
+	if (!MySocket::Connect(server, Port))//连接服务器
 	{
 		return FALSE;
 	}
@@ -32,52 +50,45 @@ bool MyPop::Connect(const string Serv, const int Port)
 	return FALSE;
 }
 
-bool MyPop::ConfirmUser(const string user, const string passwd)
+bool MyPop::ConfirmUser()
 {
 	string strTemp = "USER " + user + "\r\n";
-	if (send(mySocket, strTemp.c_str(), strTemp.length(), 0) == SOCKET_ERROR)
+	if (Send(strTemp) == FALSE)
 	{
-		ReleaseSocket();
 		return FALSE;
 	}
 	// 检测user
 	if (!IsOk())
 	{
-		ReleaseSocket();
 		return FALSE;
 	}
-	//strTemp.erase(strTemp.begin(), strTemp.end());
 	strTemp = "pass " + passwd + "\r\n";
-	if (send(mySocket, strTemp.c_str(), strTemp.length(), 0) == SOCKET_ERROR)
+	if (Send(strTemp) == FALSE)
 	{
-		ReleaseSocket();
 		return FALSE;
 	}
 	// 检测passwd
 	if (!IsOk())
 	{
-		ReleaseSocket();
 		return FALSE;
 	}
 	return TRUE;
 }
 
-bool MyPop::GetAllMails(list<MailData>& svecMails)
+bool MyPop::GetAllMails(list<MailData>& svecMails,int deleteOp)
 {
 	char buf[BUF_LENTH] = { 0 };
-	sprintf(buf, "STAT\r\n");
-	if (send(mySocket, buf, strlen(buf), 0) == SOCKET_ERROR)
+	string strTemp = "STAT\r\n";
+	if (Send(strTemp) == FALSE)
 	{
-		ReleaseSocket();
 		return FALSE;
 	}
-	// 从服务器接收信息写入mailTemp中
+	// 从服务器接收信息写入buf中
 	if (recv(mySocket, buf, BUF_LENTH, 0) == SOCKET_ERROR)
 	{
-		ReleaseSocket();
 		return false;
 	}
-	cout << buf << endl;
+	sendStr(string(buf));
 	if (strncmp(buf, "+OK", 3))
 	{
 		return FALSE;
@@ -96,37 +107,40 @@ bool MyPop::GetAllMails(list<MailData>& svecMails)
 	//开始接收所有的邮件
 	for (int j = 1; j <= nMails; ++j)
 	{
-		cout << "邮件: " << j << endl;
-		sprintf(buf, "RETR %d\r\n", j);
-		if (send(mySocket, buf, strlen(buf) , 0) == SOCKET_ERROR)//第三个参数不能乱写啊!!!
+		sprintf(buf, "RETR %d\r\n", j);//获取该邮件全部内容
+		if (Send(buf) == FALSE)
 		{
-			ReleaseSocket();
-			return false;
+			return FALSE;
 		}
-		cout << buf;
-		//开始接收第j封邮件
 		//一直接收直到接收到的最后的三个字符为遇到".\r\n"
 		int len = 0;
-		string ctemp(""),endTemp("");
+		char Buf[MAIL_LENTH + 1];
+		string ctemp = "",endTemp = "";
 		while (endTemp != ".\r\n")
 		{
-			if ((len = recv(mySocket, buf, BUF_LENTH - 1, 0)) == SOCKET_ERROR)
+			if ((len = recv(mySocket, Buf, MAIL_LENTH, 0)) == SOCKET_ERROR)
 			{
-				ReleaseSocket();
 				return FALSE;
 			}
-			buf[len] = '\0';
-			ctemp += buf;
-			endTemp = ctemp.substr(ctemp.length() - 3,3);
+			Buf[len] = '\0';
+			ctemp += Buf;
+			endTemp = ctemp.substr(ctemp.length() - 3, 3);
 		}
-
+		if (deleteOp)
+		{
+			sprintf(buf, "DELE %d\r\n", j);//删除该邮件
+			if (Send(buf) == FALSE)
+			{
+				return FALSE;
+			}
+		}
 		MyBase64 base64;
-		int pos1 = 0, pos2 = 0,pos3 = 0;
+		int pos1 = 0, pos2 = 0, pos3 = 0;
 		while ((pos1 = ctemp.find("?B?", pos1)) != -1)/*对?B?进行解码*/
 		{
 			pos3 = ctemp.rfind("=?", pos1) - 1;
 			pos2 = ctemp.find("?=", pos1);
-			string stemp = ctemp.substr(pos1+3, pos2 - pos1 - 3);
+			string stemp = ctemp.substr(pos1 + 3, pos2 - pos1 - 3);
 			stemp = UTF8_To_GBK(stemp);
 			stemp = base64.Decode(stemp.c_str(), stemp.length(), len);
 			ctemp.replace(pos3, pos2 - pos3 + 3, stemp);
@@ -143,55 +157,67 @@ bool MyPop::GetAllMails(list<MailData>& svecMails)
 			ctemp.replace(pos3, pos2 - pos3 + 3, stemp);
 			pos1 = pos3;
 		}
-		//cout << ctemp.substr(0,10000);      
 		MailData MailTemp;
 		DecodeMail(MailTemp, ctemp);
-		Print(MailTemp);
 		svecMails.push_back(MailTemp);
 	}
-	sprintf(buf, "QUIT\r\n");
-	send(mySocket, buf, strlen(buf), 0);
-	ReleaseSocket();
+	strTemp = "QUIT\r\n";
+	if (Send(strTemp) == FALSE)
+	{
+		return FALSE;
+	}
 	return TRUE;
 }
 
 bool MyPop::DecodeMail(MailData &CurrentMail, const string revData)
 {
+	int pos1 = 0, pos2 = 0, pos3 = 0,pos4 = 0;
 	//获取发送者姓名与发送者地址
-	int pos1 = 0, pos2 = 0, pos3 = 0;
-	if ((pos1 = revData.find("\r\nFrom:", pos1)) != -1)
+	//cout << revData;
+	if ((pos1 = revData.find("\nFrom:", pos1)) != -1)
 	{
-		//pos2 = pos1 + 6;
-		//while (revData[pos2] != '<')
-		//{
-		//	pos2++;
-		//}
-		if ((pos2 = revData.find("<", pos1)) != -1)
+		pos1 += string("\nFrom:").length();
+		if ((pos4 = revData.find("\r\nTo:", pos1)) != -1)
 		{
-			CurrentMail.sender = revData.substr(pos1 + 7, pos2 - pos1 - 7);
-			if ((pos3 = revData.find(">", pos1)) != -1)
+			if ((pos2 = revData.find("<", pos1)) != -1)
 			{
-				CurrentMail.srcAddr = revData.substr(pos2 + 1, pos3 - pos2 - 1);
+				if (pos2 < pos4)
+				{
+					CurrentMail.sender = revData.substr(pos1, pos2 - pos1);
+					if ((pos3 = revData.find(">", pos1)) != -1)
+					{
+						CurrentMail.srcAddr = revData.substr(pos2 + 1, pos3 - pos2 - 1);
+					}
+				}
+				else
+				{
+					CurrentMail.srcAddr = revData.substr(pos1, pos4 - pos1);
+				}
+			}
+			else
+			{
+				CurrentMail.srcAddr = revData.substr(pos1, pos4 - pos1);
 			}
 		}
 	}
 	//获取邮件主题
-	if ((pos1 = revData.find("\r\nSubject:", pos1)) != -1)
+	if ((pos1 = revData.find("\nSubject:", pos1)) != -1)
 	{
-		pos1 += string("\r\nSubject:").length();
-		if ((pos2 = revData.find("\r\n", pos1)) != -1)
+		pos1 += string("\nSubject:").length();
+		if (((pos2 = revData.find("\nMime-Version:", pos1)) != -1) || ((pos2 = revData.find("\nMIME-Version:", pos1)) != -1))
 		{
 			CurrentMail.subject = revData.substr(pos1, pos2 - pos1);
 		}
 	}
 	//获取邮件时间
-	if ((pos1 = revData.find("\r\nDate:", pos1)) != -1)
+	if ((pos2 = revData.find("\nDate:", pos1)) != -1)
 	{
-		if (((pos2 = revData.find(" +0800", pos1)) != -1) || ((pos2 = revData.find(" +0000", pos1)) != -1))
+		if (((pos3 = revData.find(" +0800", pos2)) != -1) || ((pos3 = revData.find(" +0000", pos2)) != -1))
 		{
-			CurrentMail.time = revData.substr(pos1 + 7, pos2 - pos1 - 7);
+			CurrentMail.time = revData.substr(pos2 + 6, pos3 - pos2 - 6);
 		}
 	}
+	CurrentMail.ID = "";
 	//获取邮件内容
 	int len = 0;
 	while ((pos1 = revData.find("Content-Type:", pos1)) != -1)
@@ -234,10 +260,10 @@ bool MyPop::DecodeMail(MailData &CurrentMail, const string revData)
 			else if (MainType.substr(0, 11) == "application")
 			{
 				currentContent.type = 4;
-				if ((pos2 = revData.find("name=", pos2)) != -1)
+				if ((pos2 = revData.find("name=\"", pos2)) != -1)
 				{
-					pos2 += string("name=").length();
-					pos3 = revData.find("\r\nContent-Disposition:", pos1);
+					pos2 += string("name=\"").length();
+					pos3 = revData.find("\"", pos2);
 					if (pos3 > pos2)
 					{/*记录application附件ID*/
 						currentContent.name = revData.substr(pos2, pos3 - pos2);
@@ -324,6 +350,7 @@ string MyPop::UTF8_To_GBK(const std::string & str)
 	string retStr(pBuf);
 	delete[]pBuf;
 	delete[]pwBuf;
+
 	return retStr;
 }
 

@@ -36,15 +36,15 @@ MailList::MailList(QWidget *parent):QWidget(parent)
     item -> setIcon(QIcon(":/images/icons/unopen.png"));
     item -> setSizeHint(QSize(12,12));
     mTable -> setHorizontalHeaderItem(0,item);
-    this->initActions();
     QVBoxLayout *mainLyt = new QVBoxLayout(this);
     mainLyt -> addWidget(mTable);
+    this->initActions();
 }
 //void MailList::contextMenuEvent(QContextMenuEvent *event)
 //{
 //    mPopMenu -> resize(QSize(200,180));
-//    //ç”±äºŽQTableWidgetè¢«æ”¾å…¥åˆ«çš„QWidgetåŽï¼Œä½¿ç”¨mTable -> mapFromGlobal(QCursor::pos())çš„åŠžæ³•æ— æ³•æ•æ‰æœ€åŽä¸€è¡Œitemçš„å³é”®ä¿¡æ¯
-//    //æ‰€ä»¥ä½¿ç”¨mTable -> viewport() è¿”å›žå½“å‰åæ ‡çš„QWidgetç„¶åŽå†mapFromGlobal()èŽ·å–itemä¿¡æ¯ã€‚
+//    //ÓÉÓÚQTableWidget±»·ÅÈë±ðµÄQWidgetºó£¬Ê¹ÓÃmTable -> mapFromGlobal(QCursor::pos())µÄ°ì·¨ÎÞ·¨²¶×½×îºóÒ»ÐÐitemµÄÓÒ¼üÐÅÏ¢
+//    //ËùÒÔÊ¹ÓÃmTable -> viewport() ·µ»Øµ±Ç°×ø±êµÄQWidgetÈ»ºóÔÙmapFromGlobal()»ñÈ¡itemÐÅÏ¢¡£
 //    QPoint point = mTable -> viewport() -> mapFromGlobal(QCursor::pos());
 //    qDebug()<<mTable -> currentRow()<< point;
 //    QTableWidgetItem *item = mTable -> itemAt(point);
@@ -59,28 +59,60 @@ MailList::MailList(QWidget *parent):QWidget(parent)
 //    }
 
 //}
-void MailList::setBox(QString &filename)
+void MailList::fillTable()
 {
-    readBoxFile(filename,mQqsl);
-    qDebug()<<mQqsl;
-    int row = 0;
-    QStringList qsl;
+    QString str;
+    MailData md;
     mTable -> clearContents();
-    for(QList<QStringList>::iterator it = mQqsl.begin();it != mQqsl.end();it++)
+    int row = 0;
+    for(QList<MailData>::iterator it = mdl.begin();it != mdl.end();it++)
     {
-        qsl = *it;
+        md = *it;
         mTable -> setRowCount(row+1);
-        mTable -> setItem(row,1,new QTableWidgetItem(qsl.at(1)));
-        mTable -> setItem(row,2,new QTableWidgetItem(qsl.at(3)));
-        mTable -> setItem(row++,3,new QTableWidgetItem(qsl.at(5)));
+        if(mType == RECV || mType == DUST)
+            mTable -> setItem(row,1,new QTableWidgetItem(str.fromStdString(md.srcAddr)));
+        else
+            mTable -> setItem(row,1,new QTableWidgetItem(dstr2QString(md.dstAddr)));
+        //
+        mTable -> setItem(row,2,new QTableWidgetItem(str.fromStdString(md.subject)));
+        mTable -> setItem(row++,3,new QTableWidgetItem(str.fromStdString(md.time)));
     }
-    qDebug()<<"setBox"<<filename;
+}
+
+void MailList::clearBox()
+{
+    mTable -> clearContents();
+    mTable -> setRowCount(0);
+    mdl.clear();
+    writeBoxFile(mFileName,mdl);
+}
+
+void MailList::mdl_del(int index)
+{
+    mdl.removeAt(index);
+}
+void MailList::mdl_insert(MailData &md)
+{
+    mdl.push_back(md);
+}
+void MailList::mdl_replace(int index, MailData &md)
+{
+    mdl.removeAt(index);
+    //mdl.push_back(md);
+    mdl.insert(index,md);
+}
+void MailList::setBox()
+{
+    readBoxFile(mFileName,mdl);
+    fillTable();
+    qDebug()<<"setBox"<<mFileName;
 }
 void MailList::initActions()
 {
     mPopMenu = new QMenu(this);
-    mOpen    = new QAction(QStringLiteral("æ‰“å¼€"),this);
-    mDelete  = new QAction(QStringLiteral("åˆ é™¤"),this);
+    mOpen    = new QAction(QStringLiteral("´ò¿ª"),this);
+    mDelete  = new QAction(QStringLiteral("É¾³ý"),this);
+    mDeleAll = new QAction(QStringLiteral("Çå¿Õ"));
 }
 
 void NoFocusDelegate::paint(QPainter* painter, const QStyleOptionViewItem & option, const QModelIndex &index) const

@@ -2,42 +2,48 @@
 #define STRUCTDEF_H
 #include <string>
 #include <deque>
-#include <QString>
-#include <QStringList>
+#include <QDataStream>
 using namespace std;
-//struct Time{
-//    int year;
-//    int month;
-//    int day;
-//    int hour;
-//    int min;
-//    int sec;
-//    bool toQString(QString &);
-//    bool fromQString(QString &);
+//
+//struct Time
+//{//Äê/ÔÂ/ÈÕ/Ê±/·Ö/Ãë
+//	int year;
+//	int month;
+//	int day;
+//	int hour;
+//	int min;
+//	int sec;
 //};
-
 struct Contents
 {
-    /*å†…å®¹ç±»å‹
-    * 1--text/plain //æ­¤ç±»å‹æ²¡æœ‰å†…å®¹å
-    * 2--text/html
-    * 3--image
-    * 4--é™„ä»¶
-    */
-    int type;
-    string name;    //å†…å®¹å
-    string content; //å†…å®¹
-    QStringList toQSList();
-    Contents &formQSList(QStringList qsl);
+	/*ÄÚÈİÀàĞÍ
+	* 1--text/plain //´ËÀàĞÍÃ»ÓĞÄÚÈİÃû
+	* 2--text/html
+	* 3--image
+	* 4--¸½¼ş
+	*/
+	int type;
+	/*ÄÚÈİÃû*/
+	string name;
+	/*ÄÚÈİ*/
+	string content;
+    void write(QDataStream &stream);
+    void read(QDataStream &stream);
 };
-struct MailData{
-    string srcAddr;
-    deque<string> dstAddr;
-    string sender;
-    string subject;
-    deque<Contents> contents;// é‚®ä»¶å†…å®¹
-    string time;
-    bool   toQStringList(QStringList &);
-    MailData&   fromQStringList(QStringList &);
+struct MailData
+{
+	string ID;//ÓÊ¼ş±êÊ¶
+	string srcAddr; //·¢ËÍµØÖ·
+	deque<string> dstAddr;/*Ä¿µÄµØÖ·ÁĞ±í,ÆäÖĞ,Ê××Ö·ûÎªÅĞ¶¨×Ö·û,a--ÆÕÍ¨µØÖ·,b--³­ËÍµØÖ·,c--ÃÜËÍµØÖ·*/
+	string sender;// ·¢ËÍÕßĞÕÃû
+	string subject;// ÓÊ¼şÖ÷Ìâ
+	deque<Contents> contents;// ÓÊ¼şÄÚÈİ
+	string time;//ÓÊ¼şÊ±¼ä
+    void write(QDataStream &stream);
+    void read(QDataStream &stream);
+
 };
-#endif // STRUCTDEF_H
+QString dstr2QString(deque<string> &ds);
+deque<string> QString2dstr(QString &str,int sw = 0);
+
+#endif

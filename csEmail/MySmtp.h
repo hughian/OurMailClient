@@ -1,9 +1,3 @@
-/*
-* author: iyuge2
-* create-time: 2017/04/13 20:07
-* update-time:
-* function: define smtp header file
-*/
 #ifndef _MYSTMP_H
 #define _MYSTMP_H
 
@@ -19,15 +13,29 @@
 
 using namespace std;
 
+const string BOUNDARY = "----=NEXT_iyuge2Hugnian";
+
 class MySmtp:public MySocket
 {
 private:
+	const string user;
+	const string passwd;
+	const string server;
+	const int Port;
+private:
 	bool TellResponse(const char *ReturnCode);//判断返回码
+	bool Send(const string msg);//发送信息
+	void FormatHead(const MailData sendMail, string &contentsHead);//格式化邮件内容头部信息
+	bool SendTextBody(const string content);//发送邮件正文
+	bool SendHtml(const string content);//发送html文件
+	bool SendImage(const Contents content);//发送图片信息
+	bool SendAttachment(const Contents content);//发送附件
 public:
-	MySmtp():MySocket() {};
-	virtual ~MySmtp() {};
-	bool Connect(const string Serv, const int Port);
-	bool ConfirmUser(const string userName, const string password);//验证用户名和密码
+	MySmtp(const string server, const int port, const string user, const string passwd) :MySocket(),
+		user(user), passwd(passwd), server(server), Port(port) {};
+    virtual ~MySmtp() {ReleaseSocket();};
+	bool Connect();
+	bool ConfirmUser();//验证用户名和密码
 	bool SendMail(const MailData sendMail);//发送邮件
 	/*
 	备注:SMTP协议的返回状态信息

@@ -1,18 +1,18 @@
-ï»¿#include "Settings.h"
-
+#include "Settings.h"
 extern QString setData[8];
 
 SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
 {
-    QLabel *mUsrLabel = new QLabel(QStringLiteral("ç”¨æˆ·åï¼šã€€ã€€"));
-    QLabel *mAdrLabel = new QLabel(QStringLiteral("é‚®ä»¶è´¦æˆ·ï¼šã€€"));
-    QLabel *mPopLabel = new QLabel(QStringLiteral("æ”¶ä»¶æœåŠ¡å™¨ï¼š"));
-    QLabel *mMtpLabel = new QLabel(QStringLiteral("å‘é€æœåŠ¡å™¨ï¼š"));
-    QLabel *mRptLabel = new QLabel(QStringLiteral("ã€€ç«¯å£å·ï¼š"));
-    QLabel *mSptLabel = new QLabel(QStringLiteral("ã€€ç«¯å£å·ï¼š"));
-    QLabel *mActLabel = new QLabel(QStringLiteral("è´¦æˆ·ï¼šã€€ã€€ã€€"));
-    QLabel *mPswLabel = new QLabel(QStringLiteral("å¯†ç ï¼šã€€ã€€ã€€"));
+    QLabel *mUsrLabel = new QLabel(QStringLiteral("ÓÃ»§Ãû£º¡¡¡¡"));
+    QLabel *mAdrLabel = new QLabel(QStringLiteral("ÓÊ¼þÕË»§£º¡¡"));
+    QLabel *mPopLabel = new QLabel(QStringLiteral("ÊÕ¼þ·þÎñÆ÷£º"));
+    QLabel *mMtpLabel = new QLabel(QStringLiteral("·¢ËÍ·þÎñÆ÷£º"));
+    QLabel *mRptLabel = new QLabel(QStringLiteral("¡¡¶Ë¿ÚºÅ£º"));
+    QLabel *mSptLabel = new QLabel(QStringLiteral("¡¡¶Ë¿ÚºÅ£º"));
+    QLabel *mActLabel = new QLabel(QStringLiteral("ÕË»§£º¡¡¡¡¡¡"));
+    QLabel *mPswLabel = new QLabel(QStringLiteral("ÃÜÂë£º¡¡¡¡¡¡"));
 
+    //mUsrEdit = new AutoLineEdit();
     mUsrEdit = new QLineEdit();
     mAdrEdit = new QLineEdit();
     mPopEdit = new QLineEdit();
@@ -21,11 +21,17 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
     mSptEdit = new QLineEdit();
     mActEdit = new QLineEdit();
     mPswEdit = new QLineEdit();
+    mRptEdit -> setEnabled(false);
+    mSptEdit -> setEnabled(false);
     mPswEdit -> setEchoMode(QLineEdit::Password);
 
-    QGroupBox *mUsrGroup = new QGroupBox(QStringLiteral("ç”¨æˆ·è®¾ç½®"));
-    QGroupBox *mSerGroup = new QGroupBox(QStringLiteral("æœåŠ¡å™¨è®¾ç½®"));
-    QGroupBox *mActGroup = new QGroupBox(QStringLiteral("è´¦æˆ·è®¾ç½®"));
+    mComboBox = new QComboBox();
+    mComboBox -> addItem(QStringLiteral("±£Áô·þÎñÆ÷¶ËÓÊ¼þ"));
+    mComboBox -> addItem(QStringLiteral("É¾³ý·þÎñÆ÷¶ËÓÊ¼þ"));
+
+    QGroupBox *mUsrGroup = new QGroupBox(QStringLiteral("ÓÃ»§ÉèÖÃ"));
+    QGroupBox *mSerGroup = new QGroupBox(QStringLiteral("·þÎñÆ÷ÉèÖÃ"));
+    QGroupBox *mActGroup = new QGroupBox(QStringLiteral("ÕË»§ÉèÖÃ"));
 
     QGridLayout *mUsrLyt = new QGridLayout();
     QGridLayout *mSerLyt = new QGridLayout();
@@ -67,6 +73,7 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
     mActLyt -> addWidget(mActEdit,0,1);
     mActLyt -> addWidget(mPswLabel,1,0);
     mActLyt -> addWidget(mPswEdit,1,1);
+    mActLyt -> addWidget(mComboBox,2,1);
     //
     mActLyt -> setColumnStretch(0,1);
     mActLyt -> setColumnStretch(1,7);
@@ -76,9 +83,8 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
     mActLyt -> setContentsMargins(60,20,120,20);
     mActGroup -> setLayout(mActLyt);
 
-    mConfirm = new QPushButton(QStringLiteral("ç¡®å®š"));
-    mCancel  = new QPushButton(QStringLiteral("å–æ¶ˆ"));
-
+    mConfirm = new QPushButton(QStringLiteral("È·¶¨"));
+    mCancel  = new QPushButton(QStringLiteral("È¡Ïû"));
 
     QHBoxLayout *mBtnLyt = new QHBoxLayout();
     mBtnLyt -> addStretch(13);
@@ -97,7 +103,7 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
     connect(mConfirm,SIGNAL(clicked(bool)),this,SLOT(on_mConfirm_clicked()));
     connect(mCancel ,SIGNAL(clicked(bool)),this,SLOT(on_mCancel_clicked ()));
     setWindowIcon(QIcon(":/images/icons/settings.png"));
-    setWindowTitle(QStringLiteral("è®¾ç½®"));
+    setWindowTitle(QStringLiteral("ÉèÖÃ"));
     setWindowFlags(Qt::WindowCloseButtonHint);
     resize(QSize(500,400));
     this->readFile();
@@ -105,37 +111,31 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
 
 bool SettingsDlg::readFile()
 {
-    QString str[8];
     QLineEdit * a[8]={mUsrEdit,mAdrEdit,mPopEdit,mRptEdit,mMtpEdit,mSptEdit,mActEdit,mPswEdit};
     int i=0;
-    readSetFile(this,str);
+    readSetFile(this,setData);
     while(i<8){
-        a[i] -> setText(str[i]);
+        a[i] -> setText(setData[i]);
         i++;
     }
+    mComboBox -> setCurrentIndex(setData[deleteOp].toInt());
     return true;
 }
 bool SettingsDlg::writeFile()
 {
-    QFile file("../csEmail/data/settings.txt");
-    if(!file.open(QIODevice::WriteOnly)){
-        QMessageBox::warning(this,QStringLiteral("è­¦å‘Š"),QStringLiteral("æ— æ³•æ‰“å¼€æ–‡ä»¶settings.txt"),QMessageBox::Yes);
-        return false;
-    }
-    QDataStream stream(&file);
-    QString str;
     int i=0;
     QLineEdit * a[8]={mUsrEdit,mAdrEdit,mPopEdit,mRptEdit,mMtpEdit,mSptEdit,mActEdit,mPswEdit};
     while(i<8){
-        str = a[i++]->text();
-        stream << str;
+        setData[i] = a[i]->text();
+        i++;
     }
-    file.close();
+    setData[i] = QString::number(mComboBox->currentIndex(),10);
+
+    writeSetFile(this,setData);
     QString mTitle = "csEmail - "+mUsrEdit->text();
     send(mTitle);
     return true;
 }
-
 void SettingsDlg::on_mConfirm_clicked()
 {
     this->writeFile();

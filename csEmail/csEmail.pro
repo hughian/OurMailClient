@@ -35,7 +35,10 @@ SOURCES += main.cpp\
     WriteMailDlg.cpp \
     AboutDlg.cpp \
     Settings.cpp \
-    QMainWin.cpp
+    QMainWin.cpp \
+    SendingDlg.cpp \
+    AutoLineEdit.cpp \
+    OpenMailDlg.cpp
 
 HEADERS  += \
     qt.h \
@@ -51,7 +54,10 @@ HEADERS  += \
     WriteMailDlg.h \
     AboutDlg.h \
     Settings.h \
-    QMainWin.h
+    QMainWin.h \
+    SendingDlg.h \
+    AutoLineEdit.h \
+    OpenMailDlg.h
 
 RESOURCES += \
     img.qrc

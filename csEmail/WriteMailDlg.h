@@ -6,29 +6,54 @@ class WriteMailDlg:public QDialog
     Q_OBJECT
 public:
     WriteMailDlg(QWidget *parent =0);
-    void openDraft(QStringList &qsl);
+    void openDraft(MailData &md);
+signals:
+    void send(MailData &md);
 private:
     QLineEdit   *mRecvEdit;
+    QLineEdit   *mBccEdit;
+    QLineEdit   *mCCEdit;
     QLineEdit   *mSubsEdit;
     QTextEdit   *mCtntEdit;
+    QPushButton *mBcc;//√‹ÀÕ
+    QPushButton *mCC;//≥≠ÀÕ
+    QPushButton *mAttach;
+    QPushButton *mPhoto;
     QPushButton *mSave;
     QPushButton *mSend;
     QPushButton *mQuit;
-    QStringList mQsl;
+    MailData mMD;
+    QGridLayout *mainLyt;
+    deque<Contents> mCtnsDeque;
+    QLabel *mRecvLabel;
+    QLabel *mTipsLabel;
+    QLabel *mSubsLabel;
+    QLabel *mCtntLabel;
+    QLabel *mBccLabel;
+    QLabel *mCCLabel;
+    QString fileName;
+    int ki,kj;
+    int mi,mj;
+    bool bbci,bcci,bj;
     bool mDraftEdited,mDraftorMail; //mDraftorMail  true  -- edit draft
                                     //              false -- write mail
                                     //mDraftEdited  true  -- draft edited
                                     //              false -- dfaft unedited;
-    void readEdits(MailData &);
+    void readEdits();
     void closeEvent(QCloseEvent *event);
+    bool cmpContents();
 private slots:
+    void setLyt(int i=0, int j=0);
+    void attachFile();
+    void addPic();
+    void addBcc();
+    void addCC();
     void sendEmail();
     void saveDraft();
     bool checkEdit();
-    void change();
-    void edit();
     void setFlag();
     void save();
+    void replaceSave();
 };
 
 #endif // WRITEMAILDLG_H

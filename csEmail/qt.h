@@ -29,17 +29,22 @@
 
 #include "structdef.h"
 enum {RECV,SEND,DRAFT,DUST};
-//struct SetData{
-//    QString usrName;
-//    QString Address;
-//    QString recvSer;
-//    QString recvPort;
-//    QString sendSer;
-//    QString sendPort;
-//    QString Account;
-//    QString password;
-//};
+enum{
+    usrName,
+    Address,
+    recvSer,
+    recvPort,
+    sendSer,
+    sendPort,
+    Account,
+    password,
+    deleteOp,
+};
 bool readSetFile(QWidget *msgParent, QString str[]);
-bool readBoxFile(QString filename, QList<QStringList> &Qqsl);
-bool writeBoxFile(QString filename,QList<QStringList> &Qqsl);
+bool writeSetFile(QWidget *msgParent,QString str[]);
+bool readBoxFile(QString filename, QList<MailData> &mdl);
+bool writeBoxFile(QString filename, QList<MailData> &mdl);
+bool appendBoxFile(QString filename,MailData &md);
+
+void printmdl(QList<MailData> &mdl);
 #endif // QT_H
