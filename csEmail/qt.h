@@ -40,8 +40,8 @@ enum{
     password,
     deleteOp,
 };
-bool readSetFile(QWidget *msgParent, QString str[]);
-bool writeSetFile(QWidget *msgParent,QString str[]);
+bool readSetFile(QWidget *msgParent, QString str[], QList<QStringList> &qQsl);
+bool writeSetFile(QWidget *msgParent,QString str[],QList<QStringList> &qQsl);
 bool readBoxFile(QString filename, QList<MailData> &mdl);
 bool writeBoxFile(QString filename, QList<MailData> &mdl);
 bool appendBoxFile(QString filename,MailData &md);

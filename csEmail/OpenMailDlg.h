@@ -13,6 +13,7 @@ private:
     QLineEdit *mSubsEdit;
     QTextEdit *mCtnsEdit;
     QGridLayout *mainLyt;
+    QPushButton *mConfirm;
 };
 
 #endif // OPENMAILDLG_H

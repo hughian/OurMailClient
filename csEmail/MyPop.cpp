@@ -3,10 +3,10 @@
 #define BUF_LENTH 1024
 #define MAIL_LENTH 102400
 
-void MyPop::sendStr(string m)
-{
-	cout << m << endl;
-}
+//void MyPop::sendStr(string m)
+//{
+//	cout << m << endl;
+//}
 
 bool MyPop::Send(const string msg)
 {

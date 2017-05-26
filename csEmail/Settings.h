@@ -21,12 +21,15 @@ private:
     QLineEdit *mPswEdit;
     QPushButton *mConfirm;
     QPushButton *mCancel;
+    QComboBox   *mAdrCBox;
     QComboBox   *mComboBox;
+    QList<QStringList> mqQsl;
     bool readFile (void);
     bool writeFile(void);
 signals:
     void send(QString &);
 private slots:
+    void switchUsr(int);
     void on_mConfirm_clicked();
     void on_mCancel_clicked ();
 };

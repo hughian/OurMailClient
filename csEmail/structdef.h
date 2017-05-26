@@ -29,6 +29,7 @@ struct Contents
 	string content;
     void write(QDataStream &stream);
     void read(QDataStream &stream);
+    void deContents(QString &str);
 };
 struct MailData
 {
@@ -43,7 +44,7 @@ struct MailData
     void read(QDataStream &stream);
 
 };
-QString dstr2QString(deque<string> &ds);
-deque<string> QString2dstr(QString &str,int sw = 0);
+QString dstr2QString(deque<string> &ds, bool sw);
+deque<string> QString2dstr(QString &str, QString c = 0);
 
 #endif

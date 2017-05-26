@@ -28,6 +28,7 @@ WriteMailDlg::WriteMailDlg(QWidget *parent):QDialog(parent)
     mCtntLabel = new QLabel(QStringLiteral("正文"));
     mBccLabel  = new QLabel(QStringLiteral("密送"));
     mCCLabel   = new QLabel(QStringLiteral("抄送"));
+    mAttachLabel = new QLabel();
     //mCtntEdit -> append("<img src = E://right.png>");
     mAttach -> setFlat(true);
     mPhoto  -> setFlat(true);
@@ -136,13 +137,17 @@ void WriteMailDlg::setLyt(int i,int j)
     case 0:
         break;
     case 1:
-        kj++;
-        QLabel *attachLabel = new QLabel(fileName);
-        mainLyt -> addWidget(attachLabel,3+ki+1,2,Qt::AlignRight);
-        break;
-//    default:
-//        break;
+        if(battach){
+            kj=1;
+            battach = false;
+        }
+        mAttachLabel -> setText(fileName);
+        mainLyt -> addWidget(mAttachLabel,3+ki+1,2,Qt::AlignRight);
+            break;
+//      default:
+//          break;
     }
+
     //
     mainLyt -> addWidget(mRecvLabel,0,1,Qt::AlignLeft);
     mainLyt -> addWidget(mRecvEdit ,0,2,1,5);
@@ -150,7 +155,7 @@ void WriteMailDlg::setLyt(int i,int j)
 
     mainLyt -> addWidget(mBcc      ,1+ki,2,Qt::AlignRight);
     mainLyt -> addWidget(mCC       ,1+ki,3,Qt::AlignLeft);
-    mainLyt -> addWidget(mTipsLabel,1+ki,4,1,3);
+    mainLyt -> addWidget(mTipsLabel,1+ki,4,1,3,Qt::AlignLeft);
     //
     mainLyt -> addWidget(mSubsLabel,2+ki,1,Qt::AlignLeft);
     mainLyt -> addWidget(mSubsEdit ,2+ki,2,1,5);
@@ -197,6 +202,7 @@ void WriteMailDlg::setLyt(int i,int j)
 
 void WriteMailDlg::attachFile()
 {
+    QString fname;
     QString filepath = QFileDialog::getOpenFileName(this,QStringLiteral("添加附件"),".",\
             QStringLiteral("所有文件(*.*);;文本文件(*.txt);;HTML文件(*.html);;图片文件(*.jpeg *.jpg *.png)"));
     if(filepath != 0)
@@ -204,7 +210,7 @@ void WriteMailDlg::attachFile()
         qDebug()<<filepath;
         QStringList qsl = filepath.split("/",QString::SkipEmptyParts);
         qDebug()<<qsl;
-        fileName = qsl.at(qsl.size()-1);
+        fname = qsl.at(qsl.size()-1);
 //        filepath.indexOf()
 //        QFile file(filepath);
 //        if(!file.open(QIODevice::ReadOnly))
@@ -213,7 +219,7 @@ void WriteMailDlg::attachFile()
 //            return ;
 //        }
         ifstream file;
-        file.open(filepath.toStdString().c_str(),ios::binary|ios::in);
+        file.open(filepath.toLocal8Bit(),ios::binary|ios::in);
         if(!file){
             QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无法打开文件\n")+filepath,QMessageBox::Yes);
             return ;
@@ -221,12 +227,15 @@ void WriteMailDlg::attachFile()
         stringstream  buf;
         buf << file.rdbuf();
         string content(buf.str());
+        file.close();
         qDebug("%s",content.c_str());
         Contents ctns;
         ctns.type = 4;
-        ctns.name = fileName.toStdString();
+        ctns.name = fname.toLocal8Bit();
         ctns.content = content;
         mCtnsDeque.push_back(ctns);
+        fileName =fileName +"  "+ fname;
+        battach = true;
         setLyt(mi,1);
     }
 }
@@ -241,7 +250,7 @@ void WriteMailDlg::addPic()
         QString str = "<img src = "+filepath + ">";
         mCtntEdit -> append(str);
         ifstream file;
-        file.open(filepath.toStdString().c_str(),ios::binary|ios::in);
+        file.open(filepath.toLocal8Bit(),ios::binary|ios::in);
         if(!file){
             QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无法打开文件\n")+filepath,QMessageBox::Yes);
             return ;
@@ -251,7 +260,7 @@ void WriteMailDlg::addPic()
         string content(buf.str());
         Contents ctns;
         ctns.type = 3;
-        ctns.name = fileName.toStdString();
+        ctns.name = fileName.toLocal8Bit();
         ctns.content = content;
         mCtnsDeque.push_back(ctns);
     }
@@ -280,21 +289,15 @@ void WriteMailDlg::addCC()
 }
 void WriteMailDlg::replaceSave()
 {
-    MailData md = mMD;//获取原草稿信息
-    Contents ctns;
-    md.dstAddr = QString2dstr(mRecvEdit->text());
-    md.subject = mSubsEdit->text().toStdString();
-    md.contents.clear();
-    md.contents=mCtnsDeque;
-    md.contents.push_back(ctns);
-    send(md);
+    this -> readEdits();
+    send2Draft(mMD);
 }
 void WriteMailDlg::setFlag()
 {
-    QString dstStr = dstr2QString(mMD.dstAddr);
+    QString dstStr = dstr2QString(mMD.dstAddr,false);
     QString str;
     if(mDraftorMail){
-        if(dstStr==mRecvEdit->text() && str.fromStdString(mMD.subject)==mSubsEdit->text() && cmpContents())
+        if(dstStr==mRecvEdit->text() && str.fromLocal8Bit(mMD.subject.c_str())==mSubsEdit->text() && cmpContents())
         {   mDraftEdited = false;}
         else
         {   mDraftEdited = true;}
@@ -309,11 +312,11 @@ bool WriteMailDlg::cmpContents()
         ctns = mMD.contents.at(i);
         switch (ctns.type) {
         case 1:
-            if(QString::fromStdString(ctns.content) != mCtntEdit -> toPlainText())
+            if(QString::fromLocal8Bit(ctns.content.c_str()) != mCtntEdit -> toPlainText())
                 return false;
             break;
         case 2:
-            if(QString::fromStdString(ctns.content) != mCtntEdit -> toHtml())
+            if(QString::fromLocal8Bit(ctns.content.c_str()) != mCtntEdit -> toHtml())
                 return false;
             break;
         }
@@ -326,20 +329,20 @@ void WriteMailDlg::readEdits()
     QDateTime currentTime = QDateTime::currentDateTime();
     Contents ctns;
     mMD.ID = "";
-    mMD.srcAddr = setData[Account].toStdString();
-    mMD.sender  = setData[usrName].toStdString();
-    mMD.subject = mSubsEdit->text().toStdString();
+    mMD.srcAddr = setData[Account].toLocal8Bit();
+    mMD.sender  = setData[usrName].toLocal8Bit();
+    mMD.subject = mSubsEdit->text().toLocal8Bit();
     ctns.type = 1;  ////////
     ctns.name = ""; ////////
     ctns.content = mCtntEdit -> toPlainText().toStdString();
     mCtnsDeque.push_back(ctns);
     mMD.contents =  mCtnsDeque;
-    mMD.time    = currentTime.toString("yyyy-MM-dd hh:mm:ss").toStdString();
-    mMD.dstAddr=QString2dstr(mRecvEdit->text(),1);
+    mMD.time    = currentTime.toString("yyyy-MM-dd hh:mm:ss").toLocal8Bit();
+    mMD.dstAddr=QString2dstr(mRecvEdit->text(),"a");
     deque<string> ds;
     string s;
     if(bbci){
-        ds = QString2dstr(mBccEdit->text(),3);
+        ds = QString2dstr(mBccEdit->text(),"c");
         while(!ds.empty()){
             s = ds.back();
             ds.pop_back();
@@ -347,33 +350,34 @@ void WriteMailDlg::readEdits()
         }
     }
     if(bcci){
-        ds = QString2dstr(mCCEdit->text(),2);
+        ds = QString2dstr(mCCEdit->text(),"b");
         while(!ds.empty()){
             s= ds.back();
             ds.pop_back();
             mMD.dstAddr.push_back(s);
         }
     }
-    qDebug()<<dstr2QString(mMD.dstAddr);
+    qDebug()<<dstr2QString(mMD.dstAddr,false);
 }
 void WriteMailDlg::openDraft(MailData &md)
 {
     mMD = md;
     QString str;
     Contents ctns;
-    mRecvEdit->setText(dstr2QString(md.dstAddr));
-    mSubsEdit->setText(str.fromStdString(md.subject));
+    mRecvEdit->setText(dstr2QString(md.dstAddr,false));
+    mSubsEdit->setText(str.fromLocal8Bit(md.subject.c_str()));
     for(deque<Contents>::iterator it = md.contents.begin();it != md.contents.end();it++)
     {
         ctns = *it;
         switch (ctns.type) {
         case 1: //plian text
-            mCtntEdit ->insertPlainText(str.fromStdString(ctns.content));
+            mCtntEdit ->insertPlainText(str.fromLocal8Bit(ctns.content.c_str()));
             break;
         case 2: //html
-            mCtntEdit ->insertHtml(str.fromStdString(ctns.content));
+            mCtntEdit ->insertHtml(str.fromLocal8Bit(ctns.content.c_str()));
             break;
         case 3: //image
+            mCtntEdit -> append("< img src ="+QString::fromLocal8Bit(ctns.name.c_str()) + ">");
             break;
         case 4: //attach
             break;
@@ -399,8 +403,10 @@ void WriteMailDlg::sendEmail()
      */
     SendingDlg dlg(mMD);
 
-    if(dlg.exec() == QDialog::Accepted)
+    if(dlg.exec() == QDialog::Accepted){
+        send2Send(mMD);
         accept();
+    }
 }
 void WriteMailDlg::saveDraft()
 {
@@ -434,7 +440,7 @@ void WriteMailDlg::save()
 }
 bool WriteMailDlg::checkEdit()
 {
-    if(mRecvEdit->text().size() == 0 && mSubsEdit->text().size() == 0 && mCtntEdit->toPlainText().size()==0)
+    if(mRecvEdit->text().size() == 0 && mSubsEdit->text().size() == 0 && mCtnsDeque.size()==0)
         return true;
     else
         return false;

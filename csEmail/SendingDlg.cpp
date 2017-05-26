@@ -57,6 +57,6 @@ void SendingDlg::protest(string str)
     qDebug()<<v;
     sleep(100);
     v++;
-    mTextBrowser -> append(QString::fromStdString(str));
+    mTextBrowser -> append(QString::fromLocal8Bit(str.c_str()));
     mProgBar -> setValue(v);
 }

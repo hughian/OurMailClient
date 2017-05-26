@@ -8,7 +8,7 @@ AboutDlg::AboutDlg(QWidget *parent):QDialog(parent)
                           "border-image:url(:/images/icons/csEmail.png)");
     QLabel *mVerLabel = new QLabel(QStringLiteral("csEmail 1.116.1 Beta"));
     QLabel *mAboutLabel = new QLabel(QStringLiteral("×÷Õß£º\tIyuge2 \t tel:15172502715\n"
-                                                    "\t\t email:1223#gmail.com  \n\n"
+                                                    "\t\t email:2421778006@qq.com  \n\n"
                                                     "\tHughian\t tel:15629070792\n"
                                                     "\t\t email:760156619@qq.com"));
     QGridLayout * mainLyt = new QGridLayout(this);

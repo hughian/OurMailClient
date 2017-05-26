@@ -8,7 +8,8 @@ public:
     WriteMailDlg(QWidget *parent =0);
     void openDraft(MailData &md);
 signals:
-    void send(MailData &md);
+    void send2Draft(MailData &md);
+    void send2Send(MailData &md);
 private:
     QLineEdit   *mRecvEdit;
     QLineEdit   *mBccEdit;
@@ -31,10 +32,12 @@ private:
     QLabel *mCtntLabel;
     QLabel *mBccLabel;
     QLabel *mCCLabel;
+    QLabel *mAttachLabel;
     QString fileName;
     int ki,kj;
     int mi,mj;
     bool bbci,bcci,bj;
+    bool battach;
     bool mDraftEdited,mDraftorMail; //mDraftorMail  true  -- edit draft
                                     //              false -- write mail
                                     //mDraftEdited  true  -- draft edited

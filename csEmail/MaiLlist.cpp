@@ -70,21 +70,25 @@ void MailList::fillTable()
         md = *it;
         mTable -> setRowCount(row+1);
         if(mType == RECV || mType == DUST)
-            mTable -> setItem(row,1,new QTableWidgetItem(str.fromStdString(md.srcAddr)));
+            mTable -> setItem(row,1,new QTableWidgetItem(str.fromLocal8Bit(md.srcAddr.c_str())));
         else
-            mTable -> setItem(row,1,new QTableWidgetItem(dstr2QString(md.dstAddr)));
+            mTable -> setItem(row,1,new QTableWidgetItem(dstr2QString(md.dstAddr,false)));
         //
-        mTable -> setItem(row,2,new QTableWidgetItem(str.fromStdString(md.subject)));
-        mTable -> setItem(row++,3,new QTableWidgetItem(str.fromStdString(md.time)));
+        mTable -> setItem(row,2,new QTableWidgetItem(str.fromLocal8Bit(md.subject.c_str())));
+        mTable -> setItem(row++,3,new QTableWidgetItem(str.fromLocal8Bit(md.time.c_str())));
     }
 }
 
 void MailList::clearBox()
 {
-    mTable -> clearContents();
-    mTable -> setRowCount(0);
-    mdl.clear();
-    writeBoxFile(mFileName,mdl);
+    int ret = QMessageBox::warning(this,QStringLiteral("清空"),QStringLiteral("确认删除所有？"),QMessageBox::Yes|QMessageBox::No);
+    if(ret == QMessageBox::Yes)
+    {
+        mTable -> clearContents();
+        mTable -> setRowCount(0);
+        mdl.clear();
+        writeBoxFile(mFileName,mdl);
+    }
 }
 
 void MailList::mdl_del(int index)

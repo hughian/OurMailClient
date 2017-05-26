@@ -33,8 +33,8 @@ private:
 	bool IsOk();
 	bool Send(const string msg);/*∑¢ÀÕ–≈œ¢*/
 	bool Send(const char *buf);
-
-	void sendStr(string m);
+//signals:
+//	void sendStr(string m);
 public:
 	MyPop(const string server,const int port,const string user,const string passwd):MySocket(),
 			user(user),passwd(passwd),server(server),Port(port){};

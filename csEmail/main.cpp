@@ -1,6 +1,8 @@
 #include "QMainWin.h"
 #include <QApplication>
 #include <QTextCodec>
+#include <fstream>
+#include <sstream>
 QString filePath = "../csEmail/data";
 
 int main(int argc, char *argv[])
@@ -15,23 +17,38 @@ int main(int argc, char *argv[])
 }
 
 
-bool readSetFile(QWidget *msgParent, QString str[])
+bool readSetFile(QWidget *msgParent, QString str[],QList<QStringList> &qQsl)
 {
+    QStringList qsl;
+    QString st;
     QFile file(filePath+"/settings.txt");
     if(!file.open(QIODevice::ReadOnly)){
         QMessageBox::warning(msgParent,QStringLiteral("警告"),QStringLiteral("无法打开文件settings.txt"),QMessageBox::Yes);
         return false;
     }
     QDataStream stream(&file);
-    int i=0;
+    int i;
+    while (!stream.atEnd()) {
+        i =0;
+        while(i<9){
+            stream >> st;
+            qsl << st;
+            i++;
+        }
+        qQsl << qsl;
+    }
+
+    i = 0;
+    qsl = qQsl.at(0);
     while(i<9){
-        stream >> str[i++];
+        str[i] = qsl.at(i);
+        i++;
     }
     file.close();
     return true;
 }
 
-bool writeSetFile(QWidget *msgParent,QString str[])
+bool writeSetFile(QWidget *msgParent,QString str[],QList<QStringList> &qQsl)
 {
     QFile file(filePath+"/settings.txt");
     if(!file.open(QIODevice::WriteOnly)){
@@ -39,9 +56,10 @@ bool writeSetFile(QWidget *msgParent,QString str[])
         return false;
     }
     QDataStream stream(&file);
-    int i=0;
-    while(i<9){
-        stream << str[i++];
+    foreach (QStringList qsl, qQsl) {
+        foreach (QString st, qsl) {
+            stream << st;
+        }
     }
     file.close();
     return true;
@@ -116,12 +134,19 @@ void MailData::write(QDataStream &stream)
 {
     QString str;
     Contents ctns;
+    str = QString::fromLocal8Bit(ID.c_str());
     stream << QString::fromLocal8Bit(ID.c_str());
+    str = QString::fromLocal8Bit(time.c_str());
     stream << QString::fromLocal8Bit(time.c_str());
+    str = QString::fromLocal8Bit(srcAddr.c_str());
     stream << QString::fromLocal8Bit(srcAddr.c_str());
-    stream << dstr2QString(dstAddr);
+    str = dstr2QString(dstAddr,true);
+    stream << dstr2QString(dstAddr,true);
+    str = QString::fromLocal8Bit(sender.c_str());
     stream << QString::fromLocal8Bit(sender.c_str());
-    stream << QString::fromStdString(subject.c_str());
+    str = QString::fromLocal8Bit(subject.c_str());
+    stream << QString::fromLocal8Bit(subject.c_str());
+    str = QString::number(contents.size(),10);
     stream << QString::number(contents.size(),10);
     qDebug()<<contents.size();
     for(deque<Contents>::iterator it = contents.begin();it != contents.end();it++)
@@ -133,7 +158,6 @@ void MailData::write(QDataStream &stream)
 void MailData::read(QDataStream &stream)
 {
     QString str;
-    QStringList qsl;
     Contents ctns;
     int size;
     stream >> str;
@@ -156,34 +180,67 @@ void MailData::read(QDataStream &stream)
         contents.push_back(ctns);
     }
 }
+void Contents::deContents(QString &str)
+{
+    ofstream file;
+    QString pathName;
+    switch (type) {
+    case 1: //
+        str = QString::fromLocal8Bit(content.c_str());
+        break;
+    case 2:
+        str = QString::fromLocal8Bit(content.c_str());
+        break;
+    case 3:
+        pathName = "../csEmail/FileRecv/"+QString::fromLocal8Bit(name.c_str());
+        file.open(pathName.toLocal8Bit(),ios::binary|ios::out);
+        if(!file){
+            QMessageBox::warning(NULL,QStringLiteral("警告"),QStringLiteral("无法打开文件\n")+QString::fromLocal8Bit(name.c_str()),QMessageBox::Yes);
+            return ;
+        }
+        file << content.c_str();
+        file.close();
+        str = "../csEmail/FileRecv/" + QString::fromLocal8Bit(name.c_str());
+        break;
+    case 4:
+        str = QString::fromLocal8Bit(name.c_str());
+        pathName = "../csEmail/FileRecv/"+QString::fromLocal8Bit(name.c_str());
+        file.open(pathName.toLocal8Bit(),ios::binary|ios::out);
+        if(!file){
+            QMessageBox::warning(NULL,QStringLiteral("警告"),QStringLiteral("无法打开文件\n")+str,QMessageBox::Yes);
+            return ;
+        }
+        file << content.c_str();
+        file.close();
+        break;
+    default:
+        break;
+    }
+}
 
-
-QString dstr2QString(deque<string> &ds)
+QString dstr2QString(deque<string> &ds,bool sw) //sw = true 写入文件 sw = false 显示
 {
     QStringList qsl;
     QString str;
     for(deque<string>::iterator it = ds.begin();it != ds.end();it++)
-        qsl << str.fromStdString(*it);
+    {
+        str = QString::fromStdString(*it);
+        if(!sw)
+            str = str.mid(1,str.size()-1);
+        qsl << str;
+    }
     str = qsl.join(";");
     return str;
 }
 
-deque<string> QString2dstr(QString &str,int sw)
+deque<string> QString2dstr(QString &str,QString c)
 {
     QStringList qsl = str.split(";",QString::SkipEmptyParts);
     QString tmp;
     deque<string> ds;
     for(QStringList::iterator it = qsl.begin();it != qsl.end();it++)
     {
-        tmp = *it;
-        if(sw == 1)
-            tmp = 'a'+tmp;
-        else if(sw == 2)
-            tmp = 'b'+tmp;
-        else if(sw == 3)
-            tmp = 'c'+tmp;
-        else
-            ;
+        tmp = c + *it ;
         ds.push_back(tmp.toStdString());
     }
     return ds;
@@ -196,14 +253,15 @@ void printmdl(QList<MailData> &mdl)
     foreach (MailData md, mdl) {
         qDebug("####################################");
         qDebug("ID:%s\ntime:%s\nsrcAddr:%s\nsender:%s",md.ID.c_str(),md.time.c_str(),md.srcAddr.c_str(),md.sender.c_str());
-        qDebug()<<"dstAddr:"<<dstr2QString(md.dstAddr);
-        qDebug("subject:%s",md.subject.c_str());
+        qDebug()<<"dstAddr:"<<dstr2QString(md.dstAddr,false);
+        qDebug()<<"subject:"<<QString::fromLocal8Bit(md.subject.c_str());
         qDebug()<<"content.size:"<<md.contents.size();
         for(deque<Contents>::iterator it = md.contents.begin();it != md.contents.end();it++)
         {
             ctns = *it;
             qDebug()<<"type:"<<it->type;
-            qDebug("name:%s\ncontent:%s",ctns.name.c_str(),ctns.content.c_str());
+            qDebug("name:%s",ctns.name.c_str());
+            qDebug()<<"contents:"<<QString::fromLocal8Bit(ctns.content.c_str());
         }
         qDebug("###################################");
     }

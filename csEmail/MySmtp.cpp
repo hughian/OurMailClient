@@ -182,6 +182,9 @@ bool MySmtp::SendAttachment(const Contents content)
 
 bool MySmtp::SendMail(const MailData sendMail) // 邮件内容
 {
+    QList<MailData> mdl;
+    mdl << sendMail;
+    printmdl(mdl);
     //qDebug("%s",sendMail.contents.at(0).content.c_str());
     if(sendMail.srcAddr.empty())//判断发送地址是否为空
 		return false;

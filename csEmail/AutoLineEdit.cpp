@@ -19,6 +19,7 @@ AutoLineEdit::AutoLineEdit(QStringList &words, QWidget *parent)
 void AutoLineEdit::focusOutEvent(QFocusEvent *event)
 {
     //listView->hide();
+    event -> accept();
 }
 
 void AutoLineEdit::keyPressEvent(QKeyEvent *event) {

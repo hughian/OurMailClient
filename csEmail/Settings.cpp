@@ -25,7 +25,9 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
     mSptEdit -> setEnabled(false);
     mPswEdit -> setEchoMode(QLineEdit::Password);
 
+    mAdrCBox  = new QComboBox();
     mComboBox = new QComboBox();
+    mAdrCBox -> setDuplicatesEnabled(false);
     mComboBox -> addItem(QStringLiteral("保留服务器端邮件"));
     mComboBox -> addItem(QStringLiteral("删除服务器端邮件"));
 
@@ -102,6 +104,7 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
 
     connect(mConfirm,SIGNAL(clicked(bool)),this,SLOT(on_mConfirm_clicked()));
     connect(mCancel ,SIGNAL(clicked(bool)),this,SLOT(on_mCancel_clicked ()));
+    connect(mAdrCBox,SIGNAL(currentIndexChanged(int)),this,SLOT(switchUsr(int)));
     setWindowIcon(QIcon(":/images/icons/settings.png"));
     setWindowTitle(QStringLiteral("设置"));
     setWindowFlags(Qt::WindowCloseButtonHint);
@@ -111,13 +114,20 @@ SettingsDlg::SettingsDlg(QWidget *parent):QDialog(parent)
 
 bool SettingsDlg::readFile()
 {
+    QStringList qsl;
     QLineEdit * a[8]={mUsrEdit,mAdrEdit,mPopEdit,mRptEdit,mMtpEdit,mSptEdit,mActEdit,mPswEdit};
     int i=0;
-    readSetFile(this,setData);
+    readSetFile(this,setData,mqQsl);
     while(i<8){
         a[i] -> setText(setData[i]);
         i++;
     }
+//    for(QList<QStringList>::iterator it = mqQsl.begin();it != mqQsl.end();it++)
+//    {
+//        qsl = *it;
+//        mAdrCBox -> addItem(qsl.at(1));
+//    }
+    //mAdrCBox -> addItem(QStringLiteral("添加账户..."));
     mComboBox -> setCurrentIndex(setData[deleteOp].toInt());
     return true;
 }
@@ -130,12 +140,35 @@ bool SettingsDlg::writeFile()
         i++;
     }
     setData[i] = QString::number(mComboBox->currentIndex(),10);
-
-    writeSetFile(this,setData);
+    writeSetFile(this,setData,mqQsl);
     QString mTitle = "csEmail - "+mUsrEdit->text();
     send(mTitle);
     return true;
 }
+
+void SettingsDlg::switchUsr(int m)
+{
+    QLineEdit * a[8]={mUsrEdit,mAdrEdit,mPopEdit,mRptEdit,mMtpEdit,mSptEdit,mActEdit,mPswEdit};
+    if(mAdrCBox->itemText(m) == QStringLiteral("添加账户...")){
+        //qDebug();
+    }
+    else{
+    int i=0;
+    readSetFile(this,setData,mqQsl);
+    QStringList qsl = mqQsl.at(m);
+    for(i = 0;i<9;i++)
+    {
+        setData[i] = qsl.at(i);
+    }
+    i = 0;
+    while(i<8){
+        a[i] -> setText(setData[i]);
+        i++;
+    }
+    mComboBox -> setCurrentIndex(setData[deleteOp].toInt());
+    }
+}
+
 void SettingsDlg::on_mConfirm_clicked()
 {
     this->writeFile();

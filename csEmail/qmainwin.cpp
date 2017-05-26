@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "AboutDlg.h"
 QString setData[9];
+QList<QStringList> set;
 QMainWin::QMainWin(QWidget *parent)
     : QWidget(parent)
 {
@@ -31,8 +32,9 @@ QMainWin::QMainWin(QWidget *parent)
     connect(mNaviBar->mDustBin  ,SIGNAL(clicked(bool)),this,SLOT(Dust()));
     connect(mNaviBar->mSettings ,SIGNAL(clicked(bool)),this,SLOT(Settings()));
     connect(mNaviBar->mAbout	,SIGNAL(clicked(bool)),this,SLOT(About()));
-
-    readSetFile(this,setData);
+    connect(mDrftTable,SIGNAL(MDToSend(MailData&)),mSendTable,SLOT(appendMD(MailData&)));
+    connect(mRecvTable,SIGNAL(send2Dust(MailData&)),mDustTable,SLOT(appendMail(MailData&)));
+    readSetFile(this,setData,set);
     QFont font = mBoxLabel -> font();
     font.setBold(true);
     mBoxLabel -> setFont(font);
@@ -42,9 +44,10 @@ QMainWin::QMainWin(QWidget *parent)
 }
 void QMainWin::Write()
 {
-    WriteMailDlg *Dlg = new WriteMailDlg();
-    Dlg -> exec();
-    delete Dlg;
+    WriteMailDlg *mDlg = new WriteMailDlg();
+    connect(mDlg,SIGNAL(send2Send(MailData&)),mSendTable,SLOT(appendMD(MailData&)));
+    mDlg -> exec();
+    delete mDlg;
 }
 void QMainWin::Recv()
 {
